@@ -1,0 +1,14 @@
+name: Wiz Security Scanner
+description: Integrates wiz security scanning for infrastructure-as-code and docker images
+author: https://github.com/blstrco
+requirements:
+  - docker
+configuration:
+  properties:
+    image:
+      type: string
+    scan-type:
+      enum:
+        - "image"
+        - "iac"
+  additionalProperties: false

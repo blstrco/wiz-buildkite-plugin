@@ -25,7 +25,7 @@ setupWiz() {
 }
 
 imageScan() {
-    IMAGE="$BUILDKITE_PLUGIN_WIZ_IMAGE"
+    IMAGE="$BUILDKITE_PLUGIN_IMAGE"
     if [[ -z "${IMAGE}" ]]; then
         echo "Missing value for image. Docker image scanning requires image property."
         exit 1

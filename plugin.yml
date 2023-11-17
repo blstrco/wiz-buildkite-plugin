@@ -8,7 +8,8 @@ configuration:
     image-address:
       type: string
     scan-type:
+      type: string
       enum:
-        - "docker"
-        - "iac"
+        - docker
+        - iac
   additionalProperties: false

@@ -45,16 +45,16 @@ dockerImageScan() {
         --policy-hits-only \
         -f human \
         -o /scan/result,human \
-        --driver mountWithLayers
+        --driver mount
     exit_code="$?"
     image_name=$(echo $IMAGE | cut -d "/" -f 2)
     case $exit_code in
     7)
-        buildkite-agent annotate "Wiz Docker Image Scan:\nName: $image_name\Status: Image meets policy requirements " --style 'success' --context 'ctx-success'
+        buildkite-agent annotate "Wiz Docker Image Scan Results:\n Name: $image_name\n Status: Image meets policy requirements " --style 'success' --context 'ctx-success'
         ;;
     *)
         test_result=$(<"$PWD/result")
-        buildkite-agent annotate "Wiz Docker Image Scan:\nName: $image_name\Status: Image doesn't meet policy requirements\nDetails:$test_result" --style 'warning' --context 'ctx-warn'
+        buildkite-agent annotate "Wiz Docker Image Scan Results:\n Name: $image_name\n Status: Image doesn't meet policy requirements<br>Details:$test_result" --style 'warning' --context 'ctx-warn'
         ;;
     esac
 }

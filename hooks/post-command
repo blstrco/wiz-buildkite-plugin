@@ -3,14 +3,14 @@
 set -uxo pipefail
 
 WIZ_DIR="$HOME/.wiz"
-SCAN_TYPE="${BUILDKITE_PLUGIN_SCAN_TYPE:-}"
+SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_BUILDKITE_PLUGIN_SCAN_TYPE:-}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
     echo "Missing scan type. Possible values: 'iac', 'docker'"
     exit 1
 fi
 
-if [ "${SCAN_TYPE}" = "docker" ] && [[ -z "${BUILDKITE_PLUGIN_IMAGE_ADDRESS-}" ]]; then
+if [ "${SCAN_TYPE}" = "docker" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_BUILDKITE_PLUGIN_IMAGE_ADDRESS:-}" ]]; then
     echo "Missing image address, docker scans require a registry adress to pull the image"
     exit 1
 fi
@@ -30,7 +30,7 @@ setupWiz() {
 }
 
 dockerImageScan() {
-    IMAGE="$BUILDKITE_PLUGIN_IMAGE_ADDRESS"
+    IMAGE="$BUILDKITE_PLUGIN_WIZ_BUILDKITE_PLUGIN_IMAGE_ADDRESS"
     if [[ -z "${IMAGE}" ]]; then
         echo "Missing value for image. Docker image scanning requires image property."
         exit 1

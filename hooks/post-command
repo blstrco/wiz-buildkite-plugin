@@ -52,7 +52,7 @@ dockerImageScan() {
         buildkite-agent annotate 'Wiz: Scanned files meet policy requirements' --style 'success' --context 'ctx-success'
         ;;
     *)
-        test_result=$(<"/scan/result")
+        test_result=$(<"$PWD/result")
         buildkite-agent annotate "$test_result" --style 'warning' --context 'ctx-warn'
         ;;
     esac

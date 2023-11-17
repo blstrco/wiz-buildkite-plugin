@@ -48,13 +48,13 @@ dockerImageScan() {
     exit_code="$?"
     image_name=$(echo $IMAGE | cut -d "/" -f 2)
     case $exit_code in
-    7)
+    0)
         buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image meets policy requirements " --style 'success' --context 'ctx-success'
         exit 0
         ;;
     *)
         test_result=$(<"$PWD/result")
-        buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image doesn't meet policy requirements<br>Details:$test_result" --style 'warning' --context 'ctx-warn'
+        buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image doesn't meet policy requirements<br>$test_result" --style 'warning' --context 'ctx-warn'
         exit 1
         ;;
     esac

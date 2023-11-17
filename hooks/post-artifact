@@ -1,12 +1,17 @@
 #!/bin/bash
 
-set -euo pipefail
+set -uxo pipefail
 
 WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_SCAN_TYPE:-}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
-    echo "Missing scan type. Possible values: 'iac', 'image'"
+    echo "Missing scan type. Possible values: 'iac', 'docker'"
+    exit 1
+fi
+
+if [ "${SCAN_TYPE}" = "docker" ] && [[ -z "${BUILDKITE_PLUGIN_IMAGE_ADDRESS-}" ]]; then
+    echo "Missing image address, docker scans require a registry adress to pull the image"
     exit 1
 fi
 
@@ -24,8 +29,8 @@ setupWiz() {
         auth --id=$WIZ_API_ID --secret $WIZ_API_SECRET
 }
 
-imageScan() {
-    IMAGE="$BUILDKITE_PLUGIN_IMAGE"
+dockerImageScan() {
+    IMAGE="$BUILDKITE_PLUGIN_IMAGE_ADDRESS"
     if [[ -z "${IMAGE}" ]]; then
         echo "Missing value for image. Docker image scanning requires image property."
         exit 1
@@ -34,9 +39,23 @@ imageScan() {
     docker run \
         --rm -it \
         --mount type=bind,src=$WIZ_DIR,dst=/cli,readonly \
+        --mount type=bind,src=$PWD,dst=/scan \
         --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
-        docker scan --image $IMAGE
+        docker scan --image $IMAGE -C \
+        --policy-hits-only \
+        -f human \
+        -o /scan/result,human
+    exit_code="$?"
+    case $exit_code in
+    0)
+        buildkite-agent annotate 'Wiz: Scanned files meet policy requirements' --style 'success' --context 'ctx-success'
+        ;;
+    *)
+        test_result=$(<"/scan/result")
+        buildkite-agent annotate "$test_result" --style 'warning' --context 'ctx-warn'
+        ;;
+    esac
 }
 
 iacScan() {
@@ -51,7 +70,7 @@ iacScan() {
             --mount type=bind,src=$PWD,dst=/scan \
             wiziocli.azurecr.io/wizcli:latest-amd64 \
             iac scan \
-            --name test -f human -o /scan/results/$file_name -C \
+            --name $BUILDKITE_JOB_ID -f human -o /scan/results/$file_name,human -C \
             --types 'Cloudformation' \
             --path "/scan/cloudformation/$file"
         exit_code="$?"
@@ -74,8 +93,8 @@ iac)
     setupWiz
     iacScan
     ;;
-image)
+docker)
     setupWiz
-    imageScan
+    dockerImageScan
     ;;
 esac

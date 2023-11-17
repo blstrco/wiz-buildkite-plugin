@@ -5,10 +5,10 @@ requirements:
   - docker
 configuration:
   properties:
-    image:
+    image-address:
       type: string
     scan-type:
       enum:
-        - "image"
+        - "docker"
         - "iac"
   additionalProperties: false

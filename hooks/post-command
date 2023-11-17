@@ -35,7 +35,6 @@ dockerImageScan() {
         echo "Missing value for image. Docker image scanning requires image property."
         exit 1
     fi
-    #todo add --driver mountWithLayers?
     docker run \
         --rm -it \
         --mount type=bind,src=$WIZ_DIR,dst=/cli,readonly \
@@ -45,15 +44,17 @@ dockerImageScan() {
         docker scan --image $IMAGE -C \
         --policy-hits-only \
         -f human \
-        -o /scan/result,human
+        -o /scan/result,human \
+        --driver mountWithLayers
     exit_code="$?"
+    image_name=$(echo $IMAGE | cut -d "/" -f 2)
     case $exit_code in
     7)
-        buildkite-agent annotate 'Wiz: Scanned files meet policy requirements' --style 'success' --context 'ctx-success'
+        buildkite-agent annotate "Wiz Docker Image Scan:\nName: $image_name\Status: Image meets policy requirements " --style 'success' --context 'ctx-success'
         ;;
     *)
         test_result=$(<"$PWD/result")
-        buildkite-agent annotate "$test_result" --style 'warning' --context 'ctx-warn'
+        buildkite-agent annotate "Wiz Docker Image Scan:\nName: $image_name\Status: Image doesn't meet policy requirements\nDetails:$test_result" --style 'warning' --context 'ctx-warn'
         ;;
     esac
 }

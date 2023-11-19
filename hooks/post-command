@@ -11,7 +11,7 @@ if [[ -z "${SCAN_TYPE}" ]]; then
 fi
 
 if [ "${SCAN_TYPE}" = "docker" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}" ]]; then
-    echo "Missing image address, docker scans require a registry adress to pull the image"
+    echo "Missing image address, docker scans require an adress to pull the image"
     exit 1
 fi
 
@@ -57,10 +57,11 @@ dockerImageScan() {
 }
 
 iacScan() {
+    cdk synth "cdk.out/*.template.json"
     mkdir -p cloudformation
-    buildkite-agent artifact download "cdk/*.template.json" . --step $BUILDKITE_JOB_ID --build $BUILDKITE_BUILD_ID /cloudformation
+    #buildkite-agent artifact download "cdk/*.template.json" . --step $BUILDKITE_JOB_ID --build $BUILDKITE_BUILD_ID /cloudformation
     mkdir -p results
-    for file in cloudformation/*.template.json; do
+    for file in cdk.out/*.template.json; do
         file_name=$(basename "$file")
         docker run \
             --rm -it \

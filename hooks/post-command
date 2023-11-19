@@ -58,7 +58,7 @@ dockerImageScan() {
 }
 
 iacScan() {
-    cdk synth "cdk.out/*.template.json"
+    docker-compose run cdk synth
     mkdir -p cloudformation
     #buildkite-agent artifact download "cdk/*.template.json" . --step $BUILDKITE_JOB_ID --build $BUILDKITE_BUILD_ID /cloudformation
     mkdir -p results

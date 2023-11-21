@@ -58,11 +58,10 @@ dockerImageScan() {
 }
 
 iacScan() {
-    docker-compose -f docker-compose.yml run --name wiz_iac_scan -e CDK_DEPLOY_ACCOUNT=393349543857 --rm cdk synth qa-opex > qa-opex.yml
     mkdir -p cloudformation
-    #buildkite-agent artifact download "cdk/*.template.json" . --step $BUILDKITE_JOB_ID --build $BUILDKITE_BUILD_ID /cloudformation
+    buildkite-agent artifact download "cdk.out/*.template.json" . --step $BUILDKITE_JOB_ID --build $BUILDKITE_BUILD_ID cloudformation
     mkdir -p results
-    for file in qa-opex.yml; do
+    for file in cloudformation/*.template.json; do
         file_name=$(basename "$file")
         docker run \
             --rm -it \
@@ -72,7 +71,7 @@ iacScan() {
             iac scan \
             --name $BUILDKITE_JOB_ID -f human -o /scan/results/$file_name,human -C \
             --types 'Cloudformation' \
-            --path "/scan/$file"
+            --path "/scan/cloudformation/$file"
         exit_code="$?"
         case $exit_code in
         0)

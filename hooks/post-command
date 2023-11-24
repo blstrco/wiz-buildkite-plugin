@@ -38,7 +38,7 @@ dockerImageScan() {
         --mount type=bind,src=$PWD,dst=/scan \
         --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
-        docker scan --image $IMAGE -C \
+        docker scan --image $IMAGE \
         --policy-hits-only \
         -f human \
         -o /scan/result,human
@@ -46,12 +46,12 @@ dockerImageScan() {
     image_name=$(echo $IMAGE | cut -d "/" -f 2)
     case $exit_code in
     0)
-        buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image meets policy requirements " --style 'success' --context 'ctx-success'
+        buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image meets policy requirements " --style 'success' --context $BUILDKITE_JOB_ID
         exit 0
         ;;
     *)
         test_result=$(<"$PWD/result")
-        buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image doesn't meet policy requirements<br>$test_result" --style 'warning' --context 'ctx-warn'
+        buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image doesn't meet policy requirements<br>```term $test_result```" --style 'warning' --context $BUILDKITE_JOB_ID
         exit 1
         ;;
     esac
@@ -75,11 +75,11 @@ iacScan() {
         exit_code="$?"
         case $exit_code in
         0)
-            buildkite-agent annotate 'Wiz: Scanned files meet policy requirements' --style 'success' --context 'ctx-success'
+            buildkite-agent annotate 'Wiz: Scanned files meet policy requirements' --style 'success' --context $BUILDKITE_JOB_ID
             ;;
         *)
             test_result=$(<"/scan/results/$file_name")
-            buildkite-agent annotate "$test_result" --style 'warning' --context 'ctx-warn'
+            buildkite-agent annotate "$test_result" --style 'warning' --context $BUILDKITE_JOB_ID
             ;;
         esac
     done

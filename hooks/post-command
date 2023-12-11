@@ -64,6 +64,7 @@ iacScan() {
     # TODO this can be parameterized, hard coded for dev
     for file in infrastructure/cdk.out/*.template.json; do
         file_name=$(basename "$file")
+        job_name="${file_name}-${BUILDKITE_JOB_ID}"
         docker run \
             --rm -it \
             --mount type=bind,src=$WIZ_DIR,dst=/cli,readonly \
@@ -76,11 +77,11 @@ iacScan() {
         exit_code="$?"
         case $exit_code in
         0)
-            buildkite-agent annotate 'Wiz: Scanned files meet policy requirements' --style 'success' --context $BUILDKITE_JOB_ID
+            buildkite-agent annotate "<b>Wiz IaC Scan Results</b><br>Name:${job_name}<br>Status: Scanned files meet policy requirements" --style 'success' --context $job_name
             ;;
         *)
             test_result=$(<"/scan/results/$file_name")
-            buildkite-agent annotate "$test_result" --style 'warning' --context $BUILDKITE_JOB_ID
+            buildkite-agent annotate "<b>Wiz IaC Scan Results</b><br>Name:${job_name}<br>Status: $test_result" --style 'warning' --context $job_name
             ;;
         esac
     done

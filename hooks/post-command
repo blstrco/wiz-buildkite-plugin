@@ -72,7 +72,7 @@ iacScan() {
             iac scan \
             --name $BUILDKITE_JOB_ID -f human -o /scan/results/$file_name,human -C \
             --types 'Cloudformation' \
-            --path "/scan/infrastructure/cdk.out/$file"
+            --path "/scan/$file"
         exit_code="$?"
         case $exit_code in
         0)

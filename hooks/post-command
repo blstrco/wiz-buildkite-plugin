@@ -61,9 +61,6 @@ dockerImageScan() {
 
 iacScan() {
     mkdir -p results
-    echo $PWD
-    ls -ltR
-    ls -ltR  ~
     # TODO this can be parameterized, hard coded for dev
     for file in infrastructure/cdk.out/*.template.json; do
         file_name=$(basename "$file")

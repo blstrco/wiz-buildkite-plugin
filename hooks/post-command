@@ -60,10 +60,12 @@ dockerImageScan() {
 }
 
 iacScan() {
-    mkdir -p cloudformation
-    buildkite-agent artifact download "cdk.out/*.template.json" . --step $BUILDKITE_JOB_ID --build $BUILDKITE_BUILD_ID cloudformation
     mkdir -p results
-    for file in cloudformation/*.template.json; do
+    echo $PWD
+    ls -ltR
+    ls -ltR  ~
+    # TODO this can be parameterized, hard coded for dev
+    for file in infrastructure/cdk.out/*.template.json; do
         file_name=$(basename "$file")
         docker run \
             --rm -it \

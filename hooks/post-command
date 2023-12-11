@@ -67,7 +67,7 @@ dockerImageScan() {
 
 iacScan() {
     mkdir -p results
-    for file in "${CDK_PATH}/*.template.json"; do
+    for file in ${CDK_PATH}/*.template.json; do
         file_name=$(basename "$file")
         job_name="${file_name}-${BUILDKITE_JOB_ID}"
         docker run \

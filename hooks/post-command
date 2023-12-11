@@ -84,8 +84,6 @@ iacScan() {
             ;;
         esac
     done
-    cd results
-    buildkite-agent artifact upload "*.json"
 }
 
 case "${SCAN_TYPE}" in

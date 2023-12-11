@@ -7,6 +7,8 @@ configuration:
   properties:
     image-address:
       type: string
+    path:
+      type: string
     scan-type:
       type: string
       enum:

@@ -4,6 +4,7 @@ set -uxo pipefail
 
 WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
+CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
     echo "Missing scan type. Possible values: 'iac', 'docker'"
@@ -12,6 +13,11 @@ fi
 
 if [ "${SCAN_TYPE}" = "docker" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}" ]]; then
     echo "Missing image address, docker scans require an adress to pull the image"
+    exit 1
+fi
+
+if [ "${SCAN_TYPE}" = "iac" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_PATH:-}" ]]; then
+    echo "Missing cdk.out path, IaC scans require a path with the cloudformation files"
     exit 1
 fi
 
@@ -61,8 +67,7 @@ dockerImageScan() {
 
 iacScan() {
     mkdir -p results
-    # TODO this can be parameterized, hard coded for dev
-    for file in infrastructure/cdk.out/*.template.json; do
+    for file in "${CDK_PATH}/*.template.json"; do
         file_name=$(basename "$file")
         job_name="${file_name}-${BUILDKITE_JOB_ID}"
         docker run \

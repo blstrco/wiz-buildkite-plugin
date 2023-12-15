@@ -53,7 +53,7 @@ dockerImageScan() {
     exit_code="$?"
     image_name=$(echo $IMAGE | cut -d "/" -f 2)
     case $exit_code in
-    0)
+    7)
         buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image meets policy requirements " --style 'success' --context $BUILDKITE_JOB_ID
         exit 0
         ;;

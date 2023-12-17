@@ -63,7 +63,7 @@ dockerImageScan() {
           <summary><b>Wiz Docker Image Scan for $image_name does not meet policy requirements</b></summary>
 
           \`\`\`term
-          $(cat $PWD/result)
+          $(cat $PWD/result | sed 's/"/\\"/g')
           \`\`\`
 
           </details>

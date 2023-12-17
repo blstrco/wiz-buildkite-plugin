@@ -58,8 +58,17 @@ dockerImageScan() {
         exit 0
         ;;
     *)
-        printf "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image doesn't meet policy requirements<br>\`\`\`term\n\ %b \n\`\`\`" "$(cat $PWD/result)" \
-        | buildkite-agent annotate --style 'warning' --context $BUILDKITE_JOB_ID
+        cat <<-____EOF | buildkite-agent annotate --append --context "ctx-wiz-docker-scan" --style "warning"
+          <details>
+          <summary><b>Wiz Docker Image Scan for $image_name does not meet policy requirements</b></summary>
+
+          \`\`\`term
+          $(cat $PWD/result)
+          \`\`\`
+
+          </details>
+
+____EOF
         exit 1
         ;;
     esac

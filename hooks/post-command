@@ -46,10 +46,10 @@ dockerImageScan() {
         --mount type=bind,src=$PWD,dst=/scan \
         --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
-        docker scan --image $IMAGE \
+        docker scan --image $IMAGE -SC \
         --policy-hits-only \
         -f human \
-        -o /scan/result,human
+        -o /scan/result,human,true
     exit_code="$?"
     image_name=$(echo $IMAGE | cut -d "/" -f 2)
     case $exit_code in

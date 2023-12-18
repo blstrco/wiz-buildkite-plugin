@@ -60,14 +60,13 @@ dockerImageScan() {
     *)
         cat <<-____EOF | buildkite-agent annotate --append --context "ctx-wiz-docker-scan" --style "warning"
           <details>
-          <summary><b>Wiz Docker Image Scan for $image_name does not meet policy requirements</b></summary>
+          <summary>Wiz Docker Image Scan for $image_name does not meet policy requirements</summary>
 
           \`\`\`term
-          $(cat $PWD/result | sed 's/"/\\"/g' | sed "s/'/\\\'/g")
+          Results of the scan goes here
           \`\`\`
 
           </details>
-
 ____EOF
         exit 1
         ;;

@@ -54,6 +54,7 @@ dockerImageScan() {
         -o /scan/result,human,true
     exit_code="$?"
     image_name=$(echo $IMAGE | cut -d "/" -f 2)
+    buildkite-agent artifact upload $PWD/result --log-level info
     case $exit_code in
     7)
         buildkite-agent annotate --append "<b>Wiz Docker Image Scan for $image_name meets policy requirements " --style 'success' --context 'ctx-wiz-docker-success'
@@ -111,6 +112,7 @@ EOF
         ;;
         esac
     done
+    buildkite-agent artifact upload "results/**/*" --log-level info
 }
 
 case "${SCAN_TYPE}" in

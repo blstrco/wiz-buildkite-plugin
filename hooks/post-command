@@ -53,14 +53,14 @@ dockerImageScan() {
     exit_code="$?"
     image_name=$(echo $IMAGE | cut -d "/" -f 2)
     case $exit_code in
-    7)
-        buildkite-agent annotate "<b>Wiz Docker Image Scan Results</b><br>Name: $image_name<br>Status: Image meets policy requirements " --style 'success' --context $BUILDKITE_JOB_ID
+    0)
+        buildkite-agent annotate --append "<b>Wiz Docker Image Scan for $image_name meets policy requirements " --style 'success' --context 'ctx-wiz-docker-success'
         exit 0
         ;;
     *)
         cat <<EOF >> ./wiz-docker-scan-annotation.md
 <details>
-<summary>Wiz Docker Image Scan for <a href="artifact://wiz-docker-scan-annotation.md">$image_name</a> does not meet policy requirements.</summary>
+<summary>Wiz Docker Image Scan for $image_name does not meet policy requirements.</summary>
 
 \`\`\`term
 $(cat $PWD/result)
@@ -68,8 +68,7 @@ $(cat $PWD/result)
 
 </details>
 EOF
-        buildkite-agent artifact upload "./wiz-docker-scan-annotation.md" --log-level error
-        printf '%b\n' "$(cat ./wiz-docker-scan-annotation.md)" | buildkite-agent annotate --context 'ctx-wiz-docker-scan' --style 'warning'
+        printf '%b\n' "$(cat ./wiz-docker-scan-annotation.md)" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
         exit 1
         ;;
     esac
@@ -92,12 +91,22 @@ iacScan() {
         exit_code="$?"
         case $exit_code in
         0)
-            buildkite-agent annotate "<b>Wiz IaC Scan Results</b><br>Name:${job_name}<br>Status: Scanned files meet policy requirements" --style 'success' --context $job_name
+            buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success' "<b>Wiz IaC Scan Results for $job_name meets policy requirements"
             ;;
         *)
-            test_result=$(<"/scan/results/$file_name")
-            buildkite-agent annotate "<b>Wiz IaC Scan Results</b><br>Name:${job_name}<br>Status: $test_result" --style 'warning' --context $job_name
-            ;;
+        cat <<EOF >> ./wiz-iac-scan-annotation.md
+<details>
+<summary>Wiz IaC Scan Results for $job_name does not meet policy requirements.</summary>
+
+\`\`\`term
+$(cat /scan/results/$file_name)
+\`\`\`
+
+</details>
+EOF
+        printf '%b\n' "$(cat ./wiz-iac-scan-annotation.md)" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
+        exit 1
+        ;;
         esac
     done
 }

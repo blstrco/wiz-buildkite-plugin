@@ -46,7 +46,7 @@ dockerImageScan() {
         --mount type=bind,src=$PWD,dst=/scan \
         --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
-        docker scan --image $IMAGE -SC \
+        docker scan --image $IMAGE \
         --policy-hits-only \
         -f human \
         -o /scan/result,human,true
@@ -61,13 +61,11 @@ dockerImageScan() {
         cat <<EOF >> ./wiz-docker-scan-annotation.md
 <details>
 <summary>Wiz Docker Image Scan for <a href="artifact://wiz-docker-scan-annotation.md">$image_name</a> does not meet policy requirements.</summary>
-line 1
 
 \`\`\`term
-Results of the scan go \033[0;31mhere\033[0m
+$(cat $PWD/result)
 \`\`\`
 
-line 2
 </details>
 EOF
         buildkite-agent artifact upload "./wiz-docker-scan-annotation.md" --log-level error

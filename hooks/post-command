@@ -58,17 +58,20 @@ dockerImageScan() {
         exit 0
         ;;
     *)
-        cat <<-____EOF | buildkite-agent annotate --context "ctx-wiz-docker-scan" --style "warning"
-        **This image failed policy requirements!** Please see details below.
-        <details>
-        <summary>Wiz Docker Image Scan for $image_name does not meet policy requirements</summary>
+        cat <<EOF >> ./wiz-docker-scan-annotation.md
+<details>
+<summary>Wiz Docker Image Scan for <a href="artifact://wiz-docker-scan-annotation.md">$image_name</a> does not meet policy requirements.</summary>
+line 1
 
-        \`\`\`term
-        Results of the scan goes here
-        \`\`\`
+\`\`\`term
+Results of the scan go \033[0;31mhere\033[0m
+\`\`\`
 
-        </details>
-____EOF
+line 2
+</details>
+EOF
+        buildkite-agent artifact upload "./wiz-docker-scan-annotation.md" --log-level error
+        printf '%b\n' "$(cat ./wiz-docker-scan-annotation.md)" | buildkite-agent annotate --context 'ctx-wiz-docker-scan' --style 'warning'
         exit 1
         ;;
     esac

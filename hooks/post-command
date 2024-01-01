@@ -5,8 +5,6 @@ set -uxo pipefail
 WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
 CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
-# FIXME: Linktree Specific Env. Var.
-USE_BUILDKITE_ARTIFACT_BUCKET="false"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
     echo "Missing scan type. Possible values: 'iac', 'docker'"
@@ -54,7 +52,8 @@ dockerImageScan() {
         -o /scan/result,human,true
     exit_code="$?"
     image_name=$(echo $IMAGE | cut -d "/" -f 2)
-    buildkite-agent artifact upload $PWD/result --log-level info
+    # FIXME: Linktree Specific Env. Var.
+    USE_BUILDKITE_ARTIFACT_BUCKET="true" buildkite-agent artifact upload $PWD/result --log-level info
     case $exit_code in
     7)
         buildkite-agent annotate --append "<b>Wiz Docker Image Scan for $image_name meets policy requirements " --style 'success' --context 'ctx-wiz-docker-success'

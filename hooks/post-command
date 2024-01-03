@@ -87,7 +87,7 @@ iacScan() {
             --mount type=bind,src=$PWD,dst=/scan \
             wiziocli.azurecr.io/wizcli:latest-amd64 \
             iac scan \
-            --name $BUILDKITE_JOB_ID -f human -o /scan/results/$file_name,human -C \
+            --name $BUILDKITE_JOB_ID -f human -o /scan/results/$file_name,human \
             --types 'Cloudformation' \
             --path "/scan/$file"
         exit_code="$?"

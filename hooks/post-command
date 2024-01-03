@@ -101,13 +101,12 @@ iacScan() {
 <summary>Wiz IaC Scan Results for $job_name does not meet policy requirements.</summary>
 
 \`\`\`term
-$(cat /scan/results/$file_name)
+$(cat results/$file_name)
 \`\`\`
 
 </details>
 EOF
         printf '%b\n' "$(cat ./wiz-iac-scan-annotation.md)" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
-        exit 0
         ;;
         esac
     done

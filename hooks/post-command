@@ -112,7 +112,7 @@ EOF
     done
     buildkite-agent artifact upload "results/**/*" --log-level info
     # this post step will be used in template to check the step was run
-    echo "${BUILDKITE_JOB_ID}" > check-file && buildkite-agent artifact upload check-file
+    echo "${BUILDKITE_BUILD_ID}" > check-file && buildkite-agent artifact upload check-file
 }
 
 case "${SCAN_TYPE}" in

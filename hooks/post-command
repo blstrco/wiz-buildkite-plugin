@@ -24,34 +24,34 @@ fi
 #TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
 setupWiz() {
     echo "Setting up and authenticating wiz"
-    mkdir -p $WIZ_DIR
+    mkdir -p "$WIZ_DIR"
     #TODO wiz-id is public, we should still not have it as hardcoded
     WIZ_API_ID=4augxlyhhnbathv2zkmcbu7djt6jfu4peb6fv5v6in7xcipfkbjhg
     WIZ_API_SECRET=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-secret --query "SecretString" --output text)
     docker run \
         --rm -it \
-        --mount type=bind,src=$WIZ_DIR,dst=/cli \
+        --mount type=bind,src="$WIZ_DIR",dst=/cli \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
-        auth --id=$WIZ_API_ID --secret $WIZ_API_SECRET
+        auth --id=$WIZ_API_ID --secret "$WIZ_API_SECRET"
 }
 
 dockerImageScan() {
     # TODO check feasibility of mount/mountWithLayers
     IMAGE="${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}"
     # make sure local docker has the image
-    docker pull $IMAGE
+    docker pull "$IMAGE"
     docker run \
         --rm -it \
-        --mount type=bind,src=$WIZ_DIR,dst=/cli,readonly \
-        --mount type=bind,src=$PWD,dst=/scan \
+        --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
+        --mount type=bind,src="$PWD",dst=/scan \
         --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
-        docker scan --image $IMAGE \
+        docker scan --image "$IMAGE" \
         --policy-hits-only \
         -f human \
         -o /scan/result,human,true
     exit_code="$?"
-    image_name=$(echo $IMAGE | cut -d "/" -f 2)
+    image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
     # FIXME: Linktree Specific Env. Var.
     buildkite-agent artifact upload result --log-level info
     case $exit_code in
@@ -65,7 +65,7 @@ dockerImageScan() {
 <summary>Wiz Docker Image Scan for $image_name does not meet policy requirements.</summary>
 
 \`\`\`term
-$(cat $PWD/result)
+$(cat "$PWD"/result)
 \`\`\`
 
 </details>
@@ -83,11 +83,11 @@ iacScan() {
         job_name="${file_name}-${BUILDKITE_JOB_ID}"
         docker run \
             --rm -it \
-            --mount type=bind,src=$WIZ_DIR,dst=/cli,readonly \
-            --mount type=bind,src=$PWD,dst=/scan \
+            --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
+            --mount type=bind,src="$PWD",dst=/scan \
             wiziocli.azurecr.io/wizcli:latest-amd64 \
             iac scan \
-            --name $BUILDKITE_JOB_ID -f human -o /scan/results/$file_name,human \
+            --name "$BUILDKITE_JOB_ID" -f human -o /scan/results/"$file_name",human \
             --types 'Cloudformation' \
             --path "/scan/$file"
         exit_code="$?"
@@ -101,7 +101,7 @@ iacScan() {
 <summary>Wiz IaC Scan Results for $job_name does not meet policy requirements.</summary>
 
 \`\`\`term
-$(cat results/$file_name)
+$(cat results/"$file_name")
 \`\`\`
 
 </details>

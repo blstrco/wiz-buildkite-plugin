@@ -35,24 +35,24 @@ setupWiz() {
         auth --id=$WIZ_API_ID --secret "$WIZ_API_SECRET"
 }
 
-#$1 type, $2 name, $3 pass/fail
+#$1 type, $2 name, $3 pass/fail, $4 result file
 buildAnnotation() {
     annotation_file=${RANDOM:0:2}-annotation.md
     docker_or_iac=$(if [ "$1" = "docker" ]; then echo "Wiz Docker Image Scan"; else echo "Wiz IaC Scan"; fi)
     pass_or_fail=$(if [ "$3" ]; then echo 'meets'; else echo 'does not meet'; fi)
     summary="${docker_or_iac} for ${2} ${pass_or_fail} policy requirements"
     # we need to create a new file to avoid conflicts, we need scan type, name, pass/fail
-    cat <<EOF >> ./"${annotation_file}"
+    cat <<EOF >>./"${annotation_file}"
 <details>
 <summary>$summary.</summary>
 
 \`\`\`term
-$(cat "$PWD/result")
+$(cat "$4")
 \`\`\`
 
 </details>
 EOF
-        printf "%b\n" "$(cat ./"${annotation_file}")"
+    printf "%b\n" "$(cat ./"${annotation_file}")"
 }
 
 dockerImageScan() {
@@ -75,22 +75,12 @@ dockerImageScan() {
     # FIXME: Linktree Specific Env. Var.
     buildkite-agent artifact upload result --log-level info
     case $exit_code in
-    7)
-        buildkite-agent annotate --append "<b>Wiz Docker Image Scan for $image_name meets policy requirements " --style 'success' --context 'ctx-wiz-docker-success'
+    0)
+        buildAnnotation "docker" "$image_name" true "$PWD/result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
         exit 0
         ;;
     *)
-        cat <<EOF >> ./wiz-docker-scan-annotation.md
-<details>
-<summary>Wiz Docker Image Scan for $image_name does not meet policy requirements.</summary>
-
-\`\`\`term
-$(cat "$PWD"/result)
-\`\`\`
-
-</details>
-EOF
-        printf '%b\n' "$(cat ./wiz-docker-scan-annotation.md)" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
+        buildAnnotation "docker" "$image_name" false "$PWD/result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
         exit 0
         ;;
     esac
@@ -112,27 +102,17 @@ iacScan() {
             --path "/scan/$file"
         exit_code="$?"
         case $exit_code in
-        7)
-            buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success' "<b>Wiz IaC Scan Results for $job_name meets policy requirements"
+        0)
+            buildAnnotation "iac" "$job_name" true "results/$file_name" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
             ;;
         *)
-        cat <<EOF >> ./wiz-iac-scan-annotation.md
-<details>
-<summary>Wiz IaC Scan Results for $job_name does not meet policy requirements.</summary>
-
-\`\`\`term
-$(cat results/"$file_name")
-\`\`\`
-
-</details>
-EOF
-        printf '%b\n' "$(cat ./wiz-iac-scan-annotation.md)" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
-        ;;
+            buildAnnotation "iac" "$job_name" false "results/$file_name" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
+            ;;
         esac
     done
     buildkite-agent artifact upload "results/**/*" --log-level info
     # this post step will be used in template to check the step was run
-    echo "${BUILDKITE_BUILD_ID}" > check-file && buildkite-agent artifact upload check-file
+    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
 }
 
 case "${SCAN_TYPE}" in

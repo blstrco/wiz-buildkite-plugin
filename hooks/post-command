@@ -1,0 +1,127 @@
+#!/bin/bash
+
+set -uxo pipefail
+
+WIZ_DIR="$HOME/.wiz"
+SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
+CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
+
+if [[ -z "${SCAN_TYPE}" ]]; then
+    echo "Missing scan type. Possible values: 'iac', 'docker'"
+    exit 1
+fi
+
+if [ "${SCAN_TYPE}" = "docker" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}" ]]; then
+    echo "Missing image address, docker scans require an adress to pull the image"
+    exit 1
+fi
+
+if [ "${SCAN_TYPE}" = "iac" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_PATH:-}" ]]; then
+    echo "Missing cdk.out path, IaC scans require a path with the cloudformation files"
+    exit 1
+fi
+
+#TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
+setupWiz() {
+    echo "Setting up and authenticating wiz"
+    mkdir -p "$WIZ_DIR"
+    #TODO wiz-id is public, we should still not have it as hardcoded
+    WIZ_API_ID=***REMOVED***
+    WIZ_API_SECRET=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-secret --query "SecretString" --output text)
+    docker run \
+        --rm -it \
+        --mount type=bind,src="$WIZ_DIR",dst=/cli \
+        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        auth --id=$WIZ_API_ID --secret "$WIZ_API_SECRET"
+}
+
+#$1 type, $2 name, $3 pass/fail, $4 result file
+buildAnnotation() {
+    annotation_file=${RANDOM:0:2}-annotation.md
+    docker_or_iac=$(if [ "$1" = "docker" ]; then echo "Wiz Docker Image Scan"; else echo "Wiz IaC Scan"; fi)
+    pass_or_fail=$(if [ "$3" ]; then echo 'meets'; else echo 'does not meet'; fi)
+    summary="${docker_or_iac} for ${2} ${pass_or_fail} policy requirements"
+    # we need to create a new file to avoid conflicts, we need scan type, name, pass/fail
+    cat <<EOF >>./"${annotation_file}"
+<details>
+<summary>$summary.</summary>
+
+\`\`\`term
+$(cat "$4")
+\`\`\`
+
+</details>
+EOF
+    printf "%b\n" "$(cat ./"${annotation_file}")"
+}
+
+dockerImageScan() {
+    # TODO check feasibility of mount/mountWithLayers
+    IMAGE="${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}"
+    # make sure local docker has the image
+    docker pull "$IMAGE"
+    docker run \
+        --rm -it \
+        --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
+        --mount type=bind,src="$PWD",dst=/scan \
+        --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
+        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        docker scan --image "$IMAGE" \
+        --policy-hits-only \
+        -f human \
+        -o /scan/result,human,true
+    exit_code="$?"
+    image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
+    # FIXME: Linktree Specific Env. Var.
+    buildkite-agent artifact upload result --log-level info
+    case $exit_code in
+    0)
+        buildAnnotation "docker" "$image_name" true "$PWD/result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        exit 0
+        ;;
+    *)
+        buildAnnotation "docker" "$image_name" false "$PWD/result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
+        exit 0
+        ;;
+    esac
+}
+
+iacScan() {
+    mkdir -p results
+    for file in ${CDK_PATH}/*.template.json; do
+        file_name=$(basename "$file")
+        job_name="${file_name}-${BUILDKITE_JOB_ID}"
+        docker run \
+            --rm -it \
+            --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
+            --mount type=bind,src="$PWD",dst=/scan \
+            wiziocli.azurecr.io/wizcli:latest-amd64 \
+            iac scan \
+            --name "$BUILDKITE_JOB_ID" -f human -o /scan/results/"$file_name",human \
+            --types 'Cloudformation' \
+            --path "/scan/$file"
+        exit_code="$?"
+        case $exit_code in
+        0)
+            buildAnnotation "iac" "$job_name" true "results/$file_name" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
+            ;;
+        *)
+            buildAnnotation "iac" "$job_name" false "results/$file_name" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
+            ;;
+        esac
+    done
+    buildkite-agent artifact upload "results/**/*" --log-level info
+    # this post step will be used in template to check the step was run
+    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+}
+
+case "${SCAN_TYPE}" in
+iac)
+    setupWiz
+    iacScan
+    ;;
+docker)
+    setupWiz
+    dockerImageScan
+    ;;
+esac

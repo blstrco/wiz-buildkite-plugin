@@ -39,7 +39,7 @@ setupWiz() {
 buildAnnotation() {
     annotation_file=${RANDOM:0:2}-annotation.md
     docker_or_iac=$(if [ "$1" = "docker" ]; then echo "Wiz Docker Image Scan"; else echo "Wiz IaC Scan"; fi)
-    pass_or_fail=$(if [ "$3" ]; then echo 'meets'; else echo 'does not meet'; fi)
+    pass_or_fail=$(if [ "$3" = true ]; then echo 'meets'; else echo 'does not meet'; fi)
     summary="${docker_or_iac} for ${2} ${pass_or_fail} policy requirements"
     # we need to create a new file to avoid conflicts, we need scan type, name, pass/fail
     cat <<EOF >>./"${annotation_file}"

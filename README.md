@@ -9,9 +9,12 @@ Add the following to your `pipeline.yml`, the build step must export artifacts t
 ```yml
 steps:
   - command: ls
+    env:
+    - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
       - blstrco/wiz#v1.0.0:
-          scan-type: 'iac'
+          scan-type: 'docker'
+          image-address: "<image-address-to-pull-and-scan>"
 ```
 
 ## Configuration

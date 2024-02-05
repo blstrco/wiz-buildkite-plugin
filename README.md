@@ -17,6 +17,8 @@ steps:
           image-address: "<image-address-to-pull-and-scan>"
 ```
 
+If you are using the [AWS Assume Role Plugin](https://github.com/cultureamp/aws-assume-role-buildkite-plugin), you might have trouble getting your secret key from `aws secretsmanager` if the role you assumed doesn't have the right access rights. To restore your role, you can use the [AWS Restore Role Buildkite Plugin](https://github.com/franklin-ross/aws-restore-role-buildkite-plugin) before the wiz plugin.
+
 ## Configuration
 
 ### `image` (Optional, string)

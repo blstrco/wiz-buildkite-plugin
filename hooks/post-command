@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -uxo pipefail
+set -uo pipefail
 
 WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"

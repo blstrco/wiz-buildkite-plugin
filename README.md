@@ -47,7 +47,7 @@ steps:
         ...
       - blstrco/wiz#v1.0.1:
           scan-type: 'iac'
-          image-address: "infrastructure/cdk.out"
+          path: "infrastructure/cdk.out"
 ```
 
 ## Configuration

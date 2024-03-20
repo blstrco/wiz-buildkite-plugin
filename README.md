@@ -2,6 +2,8 @@
 
 Scans your infrastructure-as-code Cloudformation stacks or docker images for security vulnerabilities using [wiz](https://www.wiz.io/)
 
+This plugin is forked from [blstrco/wiz-buildkite-plugin](https://github.com/blstrco/wiz-buildkite-plugin).
+
 ## Examples
 
 ### Docker Scanning

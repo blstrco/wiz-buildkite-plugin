@@ -6,6 +6,6 @@ services:
       - ".:/plugin:ro"
   lint:
     image: buildkite/plugin-linter
-    command: ['--id', 'blstrco/wiz']
+    command: ['--id', 'wiz']
     volumes:
       - ".:/plugin:ro"

@@ -1,6 +1,7 @@
-name: Wiz Security Scanner
+name: "Wiz Security Scanner"
 description: Integrates wiz security scanning for infrastructure-as-code and docker images
-author: https://github.com/blstrco
+author: https://github.com/blstrco, https://github.com/buildkite-plugins
+public: true
 requirements:
   - docker
 configuration:

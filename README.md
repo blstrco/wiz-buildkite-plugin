@@ -16,7 +16,7 @@ steps:
     env:
     - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
-      - blstrco/wiz#v1.0.0:
+      - wiz#v1.1.0:
           scan-type: 'docker'
           image-address: "<image-address-to-pull-and-scan>"
 ```
@@ -24,11 +24,10 @@ steps:
 If you are using the [AWS Assume Role Plugin](https://github.com/cultureamp/aws-assume-role-buildkite-plugin), you might have trouble getting your secret key from `aws secretsmanager` if the role you assumed doesn't have the necessary access rights. To restore your role, you can use the [AWS Restore Role Buildkite Plugin](https://github.com/franklin-ross/aws-restore-role-buildkite-plugin) before the wiz plugin.
 
 ```yml
-...
   plugins:
       - franklin-ross/aws-restore-role#HEAD
-      - blstrco/wiz#v1.0.1:
-...
+      - wiz#v1.1.0:
+        scan-type: 'docker'
 ```
 
 ### IaC (Infrastructure-as-Code) Cloudformation Scanning
@@ -42,12 +41,10 @@ steps:
     - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
       - docker-compose#v4.16.0:
-        ...
         # to get the output of CDK diff, mount the volume in cdk diff stage
         - volumes:
           - './infrastructure/cdk.out:/app/infrastructure/cdk.out'
-        ...
-      - blstrco/wiz#v1.0.1:
+      - wiz#v1.1.0:
           scan-type: 'iac'
           path: "infrastructure/cdk.out"
 ```

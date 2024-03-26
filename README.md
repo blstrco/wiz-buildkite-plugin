@@ -51,6 +51,10 @@ steps:
 
 ## Configuration
 
+### `api-secret-env` (Optional, string)
+
+The environment variable that the Wiz API Secret is stored in. Defaults to using `WIZ_API_SECRET`.
+
 ### `scan-type` (Required, string) : 'docker | iac'
 The scan type can be either docker or iac
 

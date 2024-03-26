@@ -5,10 +5,13 @@ load "$BATS_PLUGIN_PATH/load.bash"
 # Uncomment the following line to debug stub failures
 # export BUILDKITE_AGENT_STUB_DEBUG=/dev/tty
 
-@test "Authenticates to wiz using \$WIZ_API_SECRET" {
+setup () {
   export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
   export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
   export WIZ_DIR="$HOME/.wiz"
+}
+
+@test "Authenticates to wiz using \$WIZ_API_SECRET" {
   export WIZ_API_ID="test"
   export WIZ_API_SECRET="secret"
 
@@ -26,9 +29,6 @@ load "$BATS_PLUGIN_PATH/load.bash"
 }
 
 @test "Authenticates to wiz using \$BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV" {
-  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
-  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
-  export WIZ_DIR="$HOME/.wiz"
   export WIZ_API_ID="test"
   export BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV="CUSTOM_WIZ_API_SECRET_ENV"
   export CUSTOM_WIZ_API_SECRET_ENV="secret"
@@ -47,8 +47,6 @@ load "$BATS_PLUGIN_PATH/load.bash"
 }
 
 @test "No Wiz API Secret password found in \$WIZ_API_SECRET" {
-  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
-  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
   export WIZ_API_ID="test"
   export WIZ_API_SECRET=""
 
@@ -59,8 +57,6 @@ load "$BATS_PLUGIN_PATH/load.bash"
 }
 
 @test "No Wiz API Secret password found in \$CUSTOM_WIZ_API_SECRET_ENV" {
-  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
-  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
   export WIZ_API_ID="test"
   export BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV="CUSTOM_WIZ_API_SECRET_ENV"
   export CUSTOM_WIZ_API_SECRET_ENV=""

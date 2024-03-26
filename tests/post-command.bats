@@ -66,3 +66,11 @@ setup () {
   assert_output --partial "No Wiz API Secret password found in $CUSTOM_WIZ_API_SECRET_ENV"
   assert_failure
 }
+
+@test "Missing scan type" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE=""
+
+  run "$PWD/hooks/post-command"
+  assert_output "Missing scan type. Possible values: 'iac', 'docker'"
+  assert_failure 
+}

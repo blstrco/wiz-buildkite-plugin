@@ -21,16 +21,22 @@ if [ "${SCAN_TYPE}" = "iac" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_PATH:-}" ]]; then
     exit 1
 fi
 
+api_secret_var="${BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV:-WIZ_API_SECRET}"
+
+if [[ -z "${!api_secret_var:-}" ]] ; then
+  echo "+++ 🚨 No Wiz API Secret password found in \$${api_secret_var}"
+  exit 1
+fi
+
 #TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
 setupWiz() {
     echo "Setting up and authenticating wiz"
     mkdir -p "$WIZ_DIR"
-    WIZ_API_SECRET=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-secret --query "SecretString" --output text)
     docker run \
         --rm -it \
         --mount type=bind,src="$WIZ_DIR",dst=/cli \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
-        auth --id="$WIZ_API_ID" --secret "$WIZ_API_SECRET"
+        auth --id="$WIZ_API_ID" --secret "$api_secret_var"
     # check that wiz-auth work expected, and a file in WIZ_DIR is created
     if [ -z "$(ls -A "$WIZ_DIR")" ]; then
         echo "Wiz authentication failed, please confirm that credentials are set for WIZ_API_ID and WIZ_API_SECRET"

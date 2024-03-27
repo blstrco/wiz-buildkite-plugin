@@ -41,6 +41,12 @@ setupWiz() {
     else
         WIZ_API_SECRET=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-secret --query "SecretString" --output text)
     fi
+    # if we can't query the secret, don't fail the build. this is a temporary measure until we can make this more resilient.
+    if [[ -z "${WIZ_API_SECRET}" ]]; then
+        echo "Error querying Wiz credentials :("
+        # why exit 0? because we don't want this to fail the build
+        exit 0
+    fi
     docker run \
         --rm -it \
         --mount type=bind,src="$WIZ_DIR",dst=/cli \

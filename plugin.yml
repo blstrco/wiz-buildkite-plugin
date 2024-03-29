@@ -17,4 +17,6 @@ configuration:
       enum:
         - docker
         - iac
+  required:
+    - scan-type
   additionalProperties: false

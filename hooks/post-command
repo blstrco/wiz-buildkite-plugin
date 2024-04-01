@@ -25,6 +25,12 @@ fi
 #TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
 setupWiz() {
     echo "Setting up and authenticating wiz"
+    # check if this is an incident, this is when we have hotfix in the build message
+    # TODO make this configurable
+    if [[ "$BUILDKITE_MESSAGE" =~ ^hotfix.* ]]; then
+        echo "Check disabled for hotfixes. This is reserved for incident responses only, please use it with caution"
+        exit 0
+    fi
     mkdir -p "$WIZ_DIR"
     # even though WIZ_API_ID is not a secret value, asking each pipeline to have it as env variable is cumbersome and makes rotating the keys
     # challenging. Get both values from secrets manager as a pair instead.

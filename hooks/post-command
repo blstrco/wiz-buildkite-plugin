@@ -23,7 +23,7 @@ fi
 
 api_secret_var="${BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV:-WIZ_API_SECRET}"
 
-if [[ -z "${!api_secret_var:-}" ]] ; then
+if [[ -z "${!api_secret_var:-}" ]]; then
   echo "+++ 🚨 No Wiz API Secret password found in \$${api_secret_var}"
   exit 1
 fi
@@ -119,7 +119,7 @@ iacScan() {
     esac
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run
-    echo "${BUILDKITE_BUILD_ID}" > check-file && buildkite-agent artifact upload check-file
+    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
 }
 
 terraformFilesScan() {

@@ -55,9 +55,9 @@ steps:
 
 The environment variable that the Wiz API Secret is stored in. Defaults to using `WIZ_API_SECRET`. Refer to the [documentation](https://buildkite.com/docs/pipelines/secrets#using-a-secrets-storage-service) for more information about managing secrets on your Buildkite agents.
 
-### `scan-type` (Required, string) : 'docker | iac'
+### `scan-type` (Required, string) : 'docker | iac | terraform-files | terraform-plan'
 
-The scan type can be either docker or iac
+The type of resource to be scanned.
 
 ### `image-address` (Optional, string)
 

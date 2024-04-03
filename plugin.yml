@@ -17,6 +17,8 @@ configuration:
       enum:
         - docker
         - iac
+        - terraform-files
+        - terraform-plan
   required:
     - scan-type
   additionalProperties: false

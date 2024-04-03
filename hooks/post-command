@@ -7,7 +7,7 @@ SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
 CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
-    echo "Missing scan type. Possible values: 'iac', 'docker'"
+    echo "Missing scan type. Possible values: 'iac', 'docker', 'terraform-files', 'terraform-plan'"
     exit 1
 fi
 

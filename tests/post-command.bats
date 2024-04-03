@@ -71,6 +71,6 @@ setup () {
   export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE=""
 
   run "$PWD/hooks/post-command"
-  assert_output "Missing scan type. Possible values: 'iac', 'docker'"
+  assert_output "Missing scan type. Possible values: 'iac', 'docker', 'terraform-files', 'terraform-plan'"
   assert_failure 
 }

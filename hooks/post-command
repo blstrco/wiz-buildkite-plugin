@@ -5,6 +5,8 @@ set -uo pipefail
 WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
 CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
+FILE_PATH="${BUILDKITE_PLUGIN_WIZ_FILE_PATH:-}"
+PARAMETER_FILES="${BUILDKITE_PLUGIN_WIZ_PARAMETER_FILES:-}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
     echo "Missing scan type. Possible values: 'iac', 'docker', 'terraform-files', 'terraform-plan'"
@@ -24,8 +26,8 @@ fi
 api_secret_var="${BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV:-WIZ_API_SECRET}"
 
 if [[ -z "${!api_secret_var:-}" ]]; then
-  echo "+++ 🚨 No Wiz API Secret password found in \$${api_secret_var}"
-  exit 1
+    echo "+++ 🚨 No Wiz API Secret password found in \$${api_secret_var}"
+    exit 1
 fi
 
 #TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
@@ -123,8 +125,30 @@ iacScan() {
 }
 
 terraformFilesScan() {
-    # TODO: complete functionaility using Wiz CLI docker image
-    true
+    mkdir -p result
+    docker run \
+        --rm -it \
+        --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
+        --mount type=bind,src="$PWD",dst=/scan \
+        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        iac scan \
+        --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
+        --types 'Terraform' \
+        --path "/scan/$FILE_PATH" \
+        --parameter-files "${PARAMETER_FILES}"
+
+    exit_code="$?"
+    case $exit_code in
+    0)
+        buildAnnotation "Terraform Files" "$BUILDKITE_LABEL" true "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
+        ;;
+    *)
+        buildAnnotation "Terraform Files" "$BUILDKITE_LABEL" false "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
+        ;;
+    esac
+    # buildkite-agent artifact upload "result/**/*" --log-level info
+    # this post step will be used in template to check the step was run
+    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
 }
 
 terraformPlanScan() {

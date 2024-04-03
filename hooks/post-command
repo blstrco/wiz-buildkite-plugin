@@ -122,6 +122,16 @@ iacScan() {
     echo "${BUILDKITE_BUILD_ID}" > check-file && buildkite-agent artifact upload check-file
 }
 
+terraformFilesScan() {
+    # TODO: complete functionaility using Wiz CLI docker image
+    true
+}
+
+terraformPlanScan() {
+    # TODO: complete functionaility using Wiz CLI docker image
+    true
+}
+
 case "${SCAN_TYPE}" in
 iac)
     setupWiz
@@ -130,5 +140,13 @@ iac)
 docker)
     setupWiz
     dockerImageScan
+    ;;
+terraform-files)
+    setupWiz
+    terraformFilesScan
+    ;;
+terraform-plan)
+    setupWiz
+    terraformPlanScan
     ;;
 esac

@@ -55,6 +55,11 @@ steps:
 
 The environment variable that the Wiz API Secret is stored in. Defaults to using `WIZ_API_SECRET`. Refer to the [documentation](https://buildkite.com/docs/pipelines/secrets#using-a-secrets-storage-service) for more information about managing secrets on your Buildkite agents.
 
+### `file-path` (Optional, string)
+
+The file or directory to scan, defaults to the root directory of repository.
+Used when `scan-type` is `terraform-files` and `terraform-plan`.
+
 ### `scan-type` (Required, string) : 'docker | iac | terraform-files | terraform-plan'
 
 The type of resource to be scanned.
@@ -62,6 +67,11 @@ The type of resource to be scanned.
 ### `image-address` (Optional, string)
 
 The path to image file, if the `scan-type` is `docker`
+
+### `parameter-files` (Optional, string)
+
+Comma separated list of globs of external parameter files to include while scanning e.g., `variables.tf`
+Used when `scan-type` is `terraform-files`.
 
 ### `path` (Optional, string)
 

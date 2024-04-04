@@ -5,9 +5,11 @@ set -uo pipefail
 WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
 CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
+FILE_PATH="${BUILDKITE_PLUGIN_WIZ_FILE_PATH:-}"
+PARAMETER_FILES="${BUILDKITE_PLUGIN_WIZ_PARAMETER_FILES:-}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
-    echo "Missing scan type. Possible values: 'iac', 'docker'"
+    echo "Missing scan type. Possible values: 'iac', 'docker', 'terraform-files', 'terraform-plan'"
     exit 1
 fi
 
@@ -21,11 +23,16 @@ if [ "${SCAN_TYPE}" = "iac" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_PATH:-}" ]]; then
     exit 1
 fi
 
+if [ "${SCAN_TYPE}" = "terraform-plan" ] && [[ -z "${FILE_PATH}" ]]; then
+    echo "+++ 🚨 file-path must be specified to Terraform Plan file when scan-type is 'terraform-plan'"
+    exit 1
+fi
+
 api_secret_var="${BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV:-WIZ_API_SECRET}"
 
-if [[ -z "${!api_secret_var:-}" ]] ; then
-  echo "+++ 🚨 No Wiz API Secret password found in \$${api_secret_var}"
-  exit 1
+if [[ -z "${!api_secret_var:-}" ]]; then
+    echo "+++ 🚨 No Wiz API Secret password found in \$${api_secret_var}"
+    exit 1
 fi
 
 #TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
@@ -119,7 +126,60 @@ iacScan() {
     esac
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run
-    echo "${BUILDKITE_BUILD_ID}" > check-file && buildkite-agent artifact upload check-file
+    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+}
+
+terraformFilesScan() {
+    mkdir -p result
+    docker run \
+        --rm -it \
+        --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
+        --mount type=bind,src="$PWD",dst=/scan \
+        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        iac scan \
+        --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
+        --types 'Terraform' \
+        --path "/scan/$FILE_PATH" \
+        --parameter-files "${PARAMETER_FILES}"
+
+    exit_code="$?"
+    case $exit_code in
+    0)
+        buildAnnotation "Terraform Files" "$BUILDKITE_LABEL" true "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-terraform-files-success' --style 'success'
+        ;;
+    *)
+        buildAnnotation "Terraform Files" "$BUILDKITE_LABEL" false "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-terraform-files-warning' --style 'warning'
+        ;;
+    esac
+    # buildkite-agent artifact upload "result/**/*" --log-level info
+    # this post step will be used in template to check the step was run
+    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+}
+
+terraformPlanScan() {
+    mkdir -p result
+    docker run \
+        --rm -it \
+        --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
+        --mount type=bind,src="$PWD",dst=/scan \
+        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        iac scan \
+        --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
+        --types 'Terraform' \
+        --path "/scan/$FILE_PATH"
+
+    exit_code="$?"
+    case $exit_code in
+    0)
+        buildAnnotation "Terraform Plan" "$BUILDKITE_LABEL" true "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-terraform-plan-success' --style 'success'
+        ;;
+    *)
+        buildAnnotation "Terraform Plan" "$BUILDKITE_LABEL" false "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-terraform-plan-warning' --style 'warning'
+        ;;
+    esac
+    # buildkite-agent artifact upload "result/**/*" --log-level info
+    # this post step will be used in template to check the step was run
+    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
 }
 
 case "${SCAN_TYPE}" in
@@ -130,5 +190,13 @@ iac)
 docker)
     setupWiz
     dockerImageScan
+    ;;
+terraform-files)
+    setupWiz
+    terraformFilesScan
+    ;;
+terraform-plan)
+    setupWiz
+    terraformPlanScan
     ;;
 esac

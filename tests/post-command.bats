@@ -5,7 +5,7 @@ load "$BATS_PLUGIN_PATH/load.bash"
 # Uncomment the following line to debug stub failures
 # export BUILDKITE_AGENT_STUB_DEBUG=/dev/tty
 
-setup () {
+setup() {
   export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
   export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
   export WIZ_DIR="$HOME/.wiz"
@@ -71,6 +71,15 @@ setup () {
   export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE=""
 
   run "$PWD/hooks/post-command"
-  assert_output "Missing scan type. Possible values: 'iac', 'docker'"
-  assert_failure 
+  assert_output "Missing scan type. Possible values: 'iac', 'docker', 'terraform-files', 'terraform-plan'"
+  assert_failure
+}
+
+@test "Terraform Plan scan without File specified" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="terraform-plan"
+  export BUILDKITE_PLUGIN_WIZ_FILE_PATH=""
+
+  run "$PWD/hooks/post-command"
+  assert_output --partial "file-path must be specified to Terraform Plan file when scan-type is 'terraform-plan'"
+  assert_failure
 }

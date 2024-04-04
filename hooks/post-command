@@ -89,24 +89,18 @@ dockerImageScan() {
         -f human \
         -o /scan/result,human,true
     exit_code="$?"
-
-    # If docker exits with a non-0, we should exit with that code and stop running
-    if [[ exit_code -ne 0 ]]; then
-        exit ${exit_code}
-    fi
     image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
     # FIXME: Linktree Specific Env. Var.
     # buildkite-agent artifact upload result --log-level info
     case $exit_code in
     0)
         buildAnnotation "docker" "$image_name" true "$PWD/result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
-        exit 0
         ;;
     *)
         buildAnnotation "docker" "$image_name" false "$PWD/result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
-        exit 0
         ;;
     esac
+    exit $exit_code
 }
 
 iacScan() {
@@ -132,6 +126,8 @@ iacScan() {
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+
+    exit $exit_code
 }
 
 terraformFilesScan() {
@@ -159,6 +155,7 @@ terraformFilesScan() {
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+    exit $exit_code
 }
 
 terraformPlanScan() {
@@ -185,6 +182,7 @@ terraformPlanScan() {
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+    exit $exit_code
 }
 
 case "${SCAN_TYPE}" in

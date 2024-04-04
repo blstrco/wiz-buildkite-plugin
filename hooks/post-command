@@ -89,6 +89,11 @@ dockerImageScan() {
         -f human \
         -o /scan/result,human,true
     exit_code="$?"
+
+    # If docker exits with a non-0, we should exit with that code and stop running
+    if [[ exit_code -ne 0 ]]; then
+        exit ${exit_code}
+    fi
     image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
     # FIXME: Linktree Specific Env. Var.
     # buildkite-agent artifact upload result --log-level info

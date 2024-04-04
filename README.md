@@ -49,6 +49,52 @@ steps:
           path: "infrastructure/cdk.out"
 ```
 
+### Terraform Files Scanning
+
+Add the following to your `pipeline.yml`, the plugin will scan a specific Terraform File and related Parameter file.
+
+```yaml
+steps:
+  - label: "Scan Terraform File"
+    env:
+    - WIZ_API_ID: "<your-id-goes-here>"
+    plugins:
+      - wiz#v1.1.0:
+          scan-type: 'terraform-files'
+          file-path: 'main.tf'
+          parameter-files: 'variables.tf'
+```
+
+By default, `file-path` will be the root of your repository, and scan all Terraform files in the directory.
+To change the directory, add the following to your `pipeline.yml`, the plugin will scan the chosen directory.
+
+```yaml
+steps:
+  - label: "Scan Terraform Files in Directory"
+    env:
+    - WIZ_API_ID: "<your-id-goes-here>"
+    plugins:
+      - wiz#v1.1.0:
+          scan-type: 'terraform-files'
+          file-path: 'my-terraform-files'
+```
+
+### Terraform Plan Scanning
+
+Add the following to your `pipeline.yml`, the plugin will scan a Terraform Plan.
+
+```yaml
+steps:
+  - label: "Scan Terraform Plan"
+    command: terraform plan -out plan.tfplan && terraform show -json plan.tfplan | jq -er . > plan.tfplanjson
+    env:
+    - WIZ_API_ID: "<your-id-goes-here>"
+    plugins:
+      - wiz#v1.1.0:
+          scan-type: 'terraform-plan'
+          file-path: 'plan.tfplanjson'
+```
+
 ## Configuration
 
 ### `api-secret-env` (Optional, string)

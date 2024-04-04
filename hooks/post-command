@@ -95,13 +95,12 @@ dockerImageScan() {
     case $exit_code in
     0)
         buildAnnotation "docker" "$image_name" true "$PWD/result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
-        exit 0
         ;;
     *)
         buildAnnotation "docker" "$image_name" false "$PWD/result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
-        exit 0
         ;;
     esac
+    exit $exit_code
 }
 
 iacScan() {
@@ -127,6 +126,8 @@ iacScan() {
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+
+    exit $exit_code
 }
 
 terraformFilesScan() {
@@ -154,6 +155,7 @@ terraformFilesScan() {
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+    exit $exit_code
 }
 
 terraformPlanScan() {
@@ -180,6 +182,7 @@ terraformPlanScan() {
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
+    exit $exit_code
 }
 
 case "${SCAN_TYPE}" in

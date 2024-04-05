@@ -21,8 +21,16 @@ configuration:
       enum:
         - docker
         - iac
-        - terraform-files
-        - terraform-plan
+    iac-type:
+      type: string
+      enum:
+        - Ansible
+        - AzureResourceManager 
+        - Cloudformation 
+        - Dockerfile 
+        - GoogleCloudDeploymentManager 
+        - Kubernetes
+        - Terraform
   required:
     - scan-type
   additionalProperties: false

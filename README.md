@@ -76,6 +76,7 @@ steps:
     plugins:
       - wiz#v1.2.0:
           scan-type: 'iac'
+          iac-type: 'Terraform'
           path: 'my-terraform-files'
 ```
 
@@ -92,6 +93,7 @@ steps:
     plugins:
       - wiz#v1.2.0:
           scan-type: 'iac'
+          iac-type: 'Terraform'
           path: 'plan.tfplanjson'
 ```
 
@@ -104,6 +106,11 @@ The environment variable that the Wiz API Secret is stored in. Defaults to using
 ### `scan-type` (Required, string) : 'docker | iac'
 
 The type of resource to be scanned.
+
+### `iac-type` (Optional, string): `Ansible | AzureResourceManager | Cloudformation | Dockerfile | GoogleCloudDeploymentManager | Kubernetes | Terraform`
+
+Narrow down the scan to specific type.
+Used when `scan-type` is `iac`.
 
 ### `image-address` (Optional, string)
 

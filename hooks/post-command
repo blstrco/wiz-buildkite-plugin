@@ -130,61 +130,6 @@ iacScan() {
     exit $exit_code
 }
 
-terraformFilesScan() {
-    mkdir -p result
-    docker run \
-        --rm -it \
-        --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
-        --mount type=bind,src="$PWD",dst=/scan \
-        wiziocli.azurecr.io/wizcli:latest-amd64 \
-        iac scan \
-        --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
-        --types 'Terraform' \
-        --path "/scan/$FILE_PATH" \
-        --parameter-files "${PARAMETER_FILES}"
-
-    exit_code="$?"
-    case $exit_code in
-    0)
-        buildAnnotation "Terraform Files" "$BUILDKITE_LABEL" true "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-terraform-files-success' --style 'success'
-        ;;
-    *)
-        buildAnnotation "Terraform Files" "$BUILDKITE_LABEL" false "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-terraform-files-warning' --style 'warning'
-        ;;
-    esac
-    # buildkite-agent artifact upload "result/**/*" --log-level info
-    # this post step will be used in template to check the step was run
-    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
-    exit $exit_code
-}
-
-terraformPlanScan() {
-    mkdir -p result
-    docker run \
-        --rm -it \
-        --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
-        --mount type=bind,src="$PWD",dst=/scan \
-        wiziocli.azurecr.io/wizcli:latest-amd64 \
-        iac scan \
-        --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
-        --types 'Terraform' \
-        --path "/scan/$FILE_PATH"
-
-    exit_code="$?"
-    case $exit_code in
-    0)
-        buildAnnotation "Terraform Plan" "$BUILDKITE_LABEL" true "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-terraform-plan-success' --style 'success'
-        ;;
-    *)
-        buildAnnotation "Terraform Plan" "$BUILDKITE_LABEL" false "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-terraform-plan-warning' --style 'warning'
-        ;;
-    esac
-    # buildkite-agent artifact upload "result/**/*" --log-level info
-    # this post step will be used in template to check the step was run
-    echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
-    exit $exit_code
-}
-
 case "${SCAN_TYPE}" in
 iac)
     setupWiz
@@ -193,13 +138,5 @@ iac)
 docker)
     setupWiz
     dockerImageScan
-    ;;
-terraform-files)
-    setupWiz
-    terraformFilesScan
-    ;;
-terraform-plan)
-    setupWiz
-    terraformPlanScan
     ;;
 esac

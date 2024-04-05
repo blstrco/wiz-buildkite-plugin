@@ -16,7 +16,7 @@ steps:
     env:
     - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
-      - wiz#v1.1.0:
+      - wiz#v1.2.0:
           scan-type: 'docker'
           image-address: "<image-address-to-pull-and-scan>"
 ```
@@ -26,7 +26,7 @@ If you are using the [AWS Assume Role Plugin](https://github.com/cultureamp/aws-
 ```yml
   plugins:
       - franklin-ross/aws-restore-role#HEAD
-      - wiz#v1.1.0:
+      - wiz#v1.2.0:
         scan-type: 'docker'
 ```
 
@@ -44,7 +44,7 @@ steps:
         # to get the output of CDK diff, mount the volume in cdk diff stage
         - volumes:
           - './infrastructure/cdk.out:/app/infrastructure/cdk.out'
-      - wiz#v1.1.0:
+      - wiz#v1.2.0:
           scan-type: 'iac'
           path: "infrastructure/cdk.out"
 ```
@@ -59,7 +59,7 @@ steps:
     env:
     - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
-      - wiz#v1.1.0:
+      - wiz#v1.2.0:
           scan-type: 'terraform-files'
           file-path: 'main.tf'
           parameter-files: 'variables.tf'
@@ -74,7 +74,7 @@ steps:
     env:
     - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
-      - wiz#v1.1.0:
+      - wiz#v1.2.0:
           scan-type: 'terraform-files'
           file-path: 'my-terraform-files'
 ```
@@ -90,7 +90,7 @@ steps:
     env:
     - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
-      - wiz#v1.1.0:
+      - wiz#v1.2.0:
           scan-type: 'terraform-plan'
           file-path: 'plan.tfplanjson'
 ```

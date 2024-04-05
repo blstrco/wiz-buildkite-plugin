@@ -1,0 +1,24 @@
+# Config for https://github.com/apps/release-drafter
+name-template: 'v$NEXT_MINOR_VERSION (🌈 Insert Release Name)'
+tag-template: 'v$NEXT_MINOR_VERSION'
+categories:
+  - title: 'Dependency Updates'
+    label: 'dependencies'
+template: |
+  ## Changes
+
+  $CHANGES
+
+  ## Upgrading
+
+  To upgrade, update your `pipeline.yml` files:
+
+  ```diff
+  steps:
+    - command: test.sh
+      plugins:
+  -     snyk#$PREVIOUS_TAG:
+  +     snyk#v$NEXT_MINOR_VERSION:
+          scan: oss
+          annotate: true
+  ```

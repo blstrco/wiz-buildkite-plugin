@@ -4,8 +4,7 @@ set -uo pipefail
 
 WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
-CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
-FILE_PATH="${BUILDKITE_PLUGIN_WIZ_FILE_PATH:-}"
+FILE_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
 PARAMETER_FILES="${BUILDKITE_PLUGIN_WIZ_PARAMETER_FILES:-}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
@@ -113,7 +112,7 @@ iacScan() {
         iac scan \
         --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
         --types 'Cloudformation' \
-        --path "/scan/$CDK_PATH"
+        --path "/scan/$FILE_PATH"
     exit_code="$?"
     case $exit_code in
     0)

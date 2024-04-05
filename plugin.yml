@@ -8,8 +8,6 @@ configuration:
   properties:
     api-secret-env:
       type: string
-    file-path:
-      type: string
     image-address:
       type: string
     parameter-files:

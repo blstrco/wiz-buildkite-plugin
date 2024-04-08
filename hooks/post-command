@@ -17,16 +17,6 @@ if [ "${SCAN_TYPE}" = "docker" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:
     exit 1
 fi
 
-if [ "${SCAN_TYPE}" = "iac" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_PATH:-}" ]]; then
-    echo "Missing cdk.out path, IaC scans require a path with the cloudformation files"
-    exit 1
-fi
-
-if [ "${SCAN_TYPE}" = "terraform-plan" ] && [[ -z "${FILE_PATH}" ]]; then
-    echo "+++ 🚨 file-path must be specified to Terraform Plan file when scan-type is 'terraform-plan'"
-    exit 1
-fi
-
 api_secret_var="${BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV:-WIZ_API_SECRET}"
 
 if [[ -z "${!api_secret_var:-}" ]]; then

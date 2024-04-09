@@ -31,6 +31,10 @@ if [[ -n "${IAC_TYPE}" ]]; then
     args+=("--types ${IAC_TYPE}")
 fi
 
+if [[ -n "${PARAMETER_FILES}" ]]; then
+    args+=("--parameter-files ${PARAMETER_FILES}")
+fi
+
 #TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
 setupWiz() {
     echo "Setting up and authenticating wiz"

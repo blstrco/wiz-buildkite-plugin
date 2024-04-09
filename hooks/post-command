@@ -6,6 +6,9 @@ WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
 FILE_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
 PARAMETER_FILES="${BUILDKITE_PLUGIN_WIZ_PARAMETER_FILES:-}"
+IAC_TYPE="${BUILDKITE_PLUGIN_WIZ_IAC_TYPE:-}"
+
+args=()
 
 if [[ -z "${SCAN_TYPE}" ]]; then
     echo "Missing scan type. Possible values: 'iac', 'docker', 'terraform-files', 'terraform-plan'"
@@ -22,6 +25,10 @@ api_secret_var="${BUILDKITE_PLUGIN_WIZ_API_SECRET_ENV:-WIZ_API_SECRET}"
 if [[ -z "${!api_secret_var:-}" ]]; then
     echo "+++ 🚨 No Wiz API Secret password found in \$${api_secret_var}"
     exit 1
+fi
+
+if [[ -n "${IAC_TYPE}" ]]; then
+    args+=("--types ${IAC_TYPE}")
 fi
 
 #TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
@@ -101,8 +108,8 @@ iacScan() {
         wiziocli.azurecr.io/wizcli:latest-amd64 \
         iac scan \
         --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
-        --types 'Cloudformation' \
-        --path "/scan/$FILE_PATH"
+        --path "/scan/$FILE_PATH" "${args[@]}"
+
     exit_code="$?"
     case $exit_code in
     0)

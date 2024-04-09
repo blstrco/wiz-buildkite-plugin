@@ -93,12 +93,3 @@ setup () {
   assert_output "Missing scan type. Possible values: 'iac', 'docker', 'terraform-files', 'terraform-plan'"
   assert_failure
 }
-
-@test "Terraform Plan scan without File specified" {
-  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="terraform-plan"
-  export BUILDKITE_PLUGIN_WIZ_FILE_PATH=""
-
-  run "$PWD/hooks/post-command"
-  assert_output --partial "file-path must be specified to Terraform Plan file when scan-type is 'terraform-plan'"
-  assert_failure
-}

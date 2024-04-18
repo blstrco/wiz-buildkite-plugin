@@ -44,8 +44,6 @@ setupWiz() {
     if [ -z "$(ls -A "$WIZ_DIR")" ]; then
         echo "Wiz authentication failed, please confirm that credentials are set for WIZ_API_ID and WIZ_API_SECRET"
         exit 1
-    else
-        echo "Authenticated successfully"
     fi
 }
 

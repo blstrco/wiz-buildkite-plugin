@@ -5,6 +5,7 @@ set -uo pipefail
 WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
 CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
+WIZ_API_ID="${WIZ_API_ID:-}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
     echo "Missing scan type. Possible values: 'iac', 'docker'"
@@ -25,7 +26,15 @@ fi
 setupWiz() {
     echo "Setting up and authenticating wiz"
     mkdir -p "$WIZ_DIR"
-    WIZ_API_SECRET=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-secret --query "SecretString" --output text)
+    # even though WIZ_API_ID is not a secret value, asking each pipeline to have it as env variable is cumbersome and makes rotating the keys
+    # challenging. Get both values from secrets manager as a pair instead.
+    if [[ -z "${WIZ_API_ID}" ]]; then
+        WIZ_API_DETAILS=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-details --query "SecretString" --output text)
+        WIZ_API_ID=${WIZ_API_DETAILS%:*}
+        WIZ_API_SECRET=${WIZ_API_DETAILS#*:}
+    else
+        WIZ_API_SECRET=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-secret --query "SecretString" --output text)
+    fi
     docker run \
         --rm -it \
         --mount type=bind,src="$WIZ_DIR",dst=/cli \

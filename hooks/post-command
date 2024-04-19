@@ -81,18 +81,18 @@ dockerImageScan() {
         docker scan --image "$IMAGE" \
         --policy-hits-only \
         -f human \
-        -o /scan/result,human,true
+        -o /scan/docker-scan-result,human,true
     exit_code="$?"
     image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
     # FIXME: Linktree Specific Env. Var.
-    # buildkite-agent artifact upload result --log-level info
+    # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
-        buildAnnotation "docker" "$image_name" true "$PWD/result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
         exit 0
         ;;
     *)
-        buildAnnotation "docker" "$image_name" false "$PWD/result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
+        buildAnnotation "docker" "$image_name" false "$PWD/docker-scan-result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
         exit 0
         ;;
     esac
@@ -112,10 +112,10 @@ iacScan() {
     exit_code="$?"
     case $exit_code in
     0)
-        buildAnnotation "iac" "$BUILDKITE_LABEL" true "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
+        buildAnnotation "iac" "$BUILDKITE_LABEL" true "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
         ;;
     *)
-        buildAnnotation "iac" "$BUILDKITE_LABEL" false "result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
+        buildAnnotation "iac" "$BUILDKITE_LABEL" false "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
         ;;
     esac
     # buildkite-agent artifact upload "result/**/*" --log-level info

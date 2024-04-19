@@ -99,7 +99,9 @@ dockerImageScan() {
 }
 
 iacScan() {
-    mkdir -p result
+    mkdir -p result templates
+    # only scan templates
+    cp "$CDK_PATH"/*.template.json templates
     docker run \
         --rm -it \
         --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
@@ -108,7 +110,7 @@ iacScan() {
         iac scan \
         --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
         --types 'Cloudformation' \
-        --path "/scan/$CDK_PATH"
+        --path "/scan/templates"
     exit_code="$?"
     case $exit_code in
     0)

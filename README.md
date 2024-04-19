@@ -11,21 +11,18 @@ Add the following to your `pipeline.yml`, the plugin will pull the image, scan i
 ```yml
 steps:
   - command: ls
-    env:
-    - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
-      - blstrco/wiz#v1.0.0:
+      - blstrco/wiz#release:
           scan-type: 'docker'
           image-address: "<image-address-to-pull-and-scan>"
 ```
-
-If you are using the [AWS Assume Role Plugin](https://github.com/cultureamp/aws-assume-role-buildkite-plugin), you might have trouble getting your secret key from `aws secretsmanager` if the role you assumed doesn't have the necessary access rights. To restore your role, you can use the [AWS Restore Role Buildkite Plugin](https://github.com/franklin-ross/aws-restore-role-buildkite-plugin) before the wiz plugin.
+If you are using the [AWS Assume Role Plugin](https://github.com/cultureamp/aws-assume-role-buildkite-plugin), you might have trouble getting your secret key from `aws secretsmanager` if the role you assumed doesn't have the necessary access rights. To restore your role, you can use the [AWS Restore Role Buildkite Plugin](https://github.com/franklin-ross/aws-restore-role-buildkite-plugin) as the *first* plugin to store and restore your role.
 
 ```yml
 ...
   plugins:
       - franklin-ross/aws-restore-role#HEAD
-      - blstrco/wiz#v1.0.1:
+      - blstrco/wiz#release:
 ...
 ```
 
@@ -36,19 +33,21 @@ To avoid adding build time overhead, you can add IaC scanning to your `cdk diff`
 ```yml
 steps:
   - command: ls
-    env:
-    - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
       - docker-compose#v4.16.0:
         ...
-        # to get the output of CDK diff, mount the volume in cdk diff stage
+        command: ["diff","...","-o","/tmp"]
+        # to get the output of CDK diff, mount the output directory as a volume
         - volumes:
-          - './infrastructure/cdk.out:/app/infrastructure/cdk.out'
+          - './cdk.out:/tmp'
         ...
-      - blstrco/wiz#v1.0.1:
+      - blstrco/wiz#release:
           scan-type: 'iac'
-          path: "infrastructure/cdk.out"
+          path: "cdk.out"
 ```
+## Incident Response
+
+By convention, if your commit message starts with `hotfix`, we don't scan it and return an early success.
 
 ## Configuration
 

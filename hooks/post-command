@@ -65,6 +65,7 @@ buildAnnotation() {
     docker_or_iac=$(if [ "$1" = "docker" ]; then echo "Wiz Docker Image Scan"; else echo "Wiz IaC Scan"; fi)
     pass_or_fail=$(if [ "$3" = true ]; then echo 'meets'; else echo 'does not meet'; fi)
     summary="${docker_or_iac} for ${2} ${pass_or_fail} policy requirements"
+    dashboard_link=$(grep -Eo 'https://app.wiz.io[^ >]+'\|head  < "$4")
     # we need to create a new file to avoid conflicts, we need scan type, name, pass/fail
     cat <<EOF >>./"${annotation_file}"
 <details>
@@ -73,7 +74,7 @@ buildAnnotation() {
 \`\`\`term
 $(cat "$4")
 \`\`\`
-
+View details of the scan report on <a href="${dashboard_link}" target="_blank">wiz dashboard</a>
 </details>
 EOF
     printf "%b\n" "$(cat ./"${annotation_file}")"

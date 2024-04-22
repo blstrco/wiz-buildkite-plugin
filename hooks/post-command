@@ -120,7 +120,7 @@ iacScan() {
         --mount type=bind,src="$PWD",dst=/scan \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
         iac scan \
-        --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
+        --name "$BUILDKITE_PIPELINE_SLUG:$BUILDKITE_BRANCH:${BUILDKITE_COMMIT:0:8}" -f human -o /scan/result/output,human \
         --types 'Cloudformation' \
         --path "/scan/templates"
     exit_code="$?"

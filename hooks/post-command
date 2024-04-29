@@ -6,6 +6,8 @@ WIZ_DIR="$HOME/.wiz"
 SCAN_TYPE="${BUILDKITE_PLUGIN_WIZ_SCAN_TYPE:-}"
 CDK_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
 WIZ_API_ID="${WIZ_API_ID:-}"
+DEPENDENCY_FILES=("package.json" "yarn.lock" "package-lock.json" "requirements.txt")
+WORKING_BRANCH="${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-$BUILDKITE_BRANCH}"
 
 if [[ -z "${SCAN_TYPE}" ]]; then
     echo "Missing scan type. Possible values: 'iac', 'docker'"
@@ -22,6 +24,26 @@ if [ "${SCAN_TYPE}" = "iac" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_PATH:-}" ]]; then
     exit 1
 fi
 
+checkModifiedFiles() {
+    # check if the PR/branch has touched any of the dependencies in the list
+    # when we shallow clone, we can't diff the refs
+    # so we need to find the diffs between our branch and pipeline branch
+    # why 100? This is so we can find a merge base, this obviously is not a bullet proof solution
+    # though, should be good enough --unshallow would convert this to a full clone (and be slightly slower)
+    git fetch --depth=100 origin "+refs/heads/${WORKING_BRANCH}:refs/remotes/origin/${WORKING_BRANCH}"
+    current_commit=$(git rev-parse FETCH_HEAD)
+    git fetch --depth=100 origin "+refs/heads/${BUILDKITE_PIPELINE_DEFAULT_BRANCH}:refs/remotes/origin/${BUILDKITE_PIPELINE_DEFAULT_BRANCH}"
+    tip_of_target=$(git rev-parse FETCH_HEAD)
+    touched_files=$(git --no-pager diff --name-only "${tip_of_target}"..."${current_commit}")
+    for dep in "${DEPENDENCY_FILES[@]}"; do
+        if [[ $touched_files == *"$dep"* ]]; then
+            # return early, save time
+            return 0
+        fi
+    done
+    return 1
+}
+
 #TODO move this to agent-startup so all agents have wiz setup to save time, possibly directly as cli
 setupWiz() {
     echo "Setting up and authenticating wiz"
@@ -31,6 +53,16 @@ setupWiz() {
         echo "Check disabled for hotfixes. This is reserved for incident responses only, please use it with caution"
         exit 0
     fi
+
+    if [ "${SCAN_TYPE}" = "docker" ]; then
+        if checkModifiedFiles; then
+            echo "Dependency files are modified, running a docker image scan"
+        else
+            echo "Scanning is disabled when dependency files are not modified"
+            exit 0
+        fi
+    fi
+
     mkdir -p "$WIZ_DIR"
     # even though WIZ_API_ID is not a secret value, asking each pipeline to have it as env variable is cumbersome and makes rotating the keys
     # challenging. Get both values from secrets manager as a pair instead.

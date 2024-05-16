@@ -68,7 +68,6 @@ EOF
 }
 
 dockerImageScan() {
-    # TODO check feasibility of mount/mountWithLayers
     IMAGE="${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}"
     # make sure local docker has the image
     docker pull "$IMAGE"

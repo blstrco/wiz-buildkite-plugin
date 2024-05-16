@@ -68,17 +68,19 @@ EOF
 }
 
 dockerImageScan() {
-    # TODO check feasibility of mount/mountWithLayers
     IMAGE="${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}"
     # make sure local docker has the image
     docker pull "$IMAGE"
     docker run \
         --rm -it \
+        --cap-add SYS_ADMIN \
         --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
         --mount type=bind,src="$PWD",dst=/scan \
-        --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
+        --mount type=bind,src=/var/lib/docker,dst=/var/lib/docker \
+        --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
         docker scan --image "$IMAGE" \
+        --driver mount \
         --policy-hits-only \
         -f human \
         -o /scan/docker-scan-result,human,true
@@ -88,7 +90,9 @@ dockerImageScan() {
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
-        buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
+            buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        fi
         exit 0
         ;;
     *)
@@ -114,7 +118,9 @@ iacScan() {
     exit_code="$?"
     case $exit_code in
     0)
-        buildAnnotation "iac" "$BUILDKITE_LABEL" true "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
+        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
+            buildAnnotation "iac" "$BUILDKITE_LABEL" true "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
+        fi
         ;;
     *)
         buildAnnotation "iac" "$BUILDKITE_LABEL" false "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'

@@ -14,4 +14,6 @@ configuration:
       enum:
         - docker
         - iac
+    annotate-success:
+      type: boolean
   additionalProperties: false

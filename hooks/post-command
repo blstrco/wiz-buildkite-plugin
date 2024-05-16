@@ -76,9 +76,10 @@ dockerImageScan() {
         --rm -it \
         --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
         --mount type=bind,src="$PWD",dst=/scan \
-        --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
+        --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
         docker scan --image "$IMAGE" \
+        --driver mount \
         --policy-hits-only \
         -f human \
         -o /scan/docker-scan-result,human,true

@@ -90,7 +90,9 @@ dockerImageScan() {
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
-        buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
+            buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        fi
         exit 0
         ;;
     *)
@@ -116,7 +118,9 @@ iacScan() {
     exit_code="$?"
     case $exit_code in
     0)
-        buildAnnotation "iac" "$BUILDKITE_LABEL" true "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
+        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
+            buildAnnotation "iac" "$BUILDKITE_LABEL" true "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-success' --style 'success'
+        fi
         ;;
     *)
         buildAnnotation "iac" "$BUILDKITE_LABEL" false "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'

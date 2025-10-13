@@ -1,19 +1,52 @@
-name: Wiz Security Scanner
+name: "Wiz Security Scanner"
 description: Integrates wiz security scanning for infrastructure-as-code and docker images
-author: https://github.com/blstrco
+author: https://github.com/blstrco, https://github.com/buildkite-plugins
+public: true
 requirements:
   - docker
 configuration:
   properties:
     image-address:
       type: string
+    scan-format:
+      type: string
+      enum:
+        - human
+        - json
+        - sarif
+      default: human
+    file-output-format:
+      type: [string, array]
+      enum:
+        - human
+        - json
+        - sarif
+        - csv-zip
+    parameter-files:
+      type: string
     path:
       type: string
     scan-type:
       type: string
       enum:
+        - dir
         - docker
         - iac
-    annotate-success:
+    show-secret-snippets:
       type: boolean
+      default: false
+    iac-type:
+      type: string
+      enum:
+        - Ansible
+        - AzureResourceManager
+        - Cloudformation
+        - Dockerfile
+        - GoogleCloudDeploymentManager
+        - Kubernetes
+        - Terraform
+    annotation-command:
+      type: string
+  required:
+    - scan-type
   additionalProperties: false

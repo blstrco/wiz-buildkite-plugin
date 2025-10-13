@@ -100,6 +100,30 @@ function detect_wiz_cli_container() {
     echo "${wiz_cli_container_repository}:${container_image_tag}"
 }
 
+function setupWiz() {
+    echo "Setting up and authenticating wiz"
+    mkdir -p "$WIZ_DIR"
+    # even though WIZ_API_ID is not a secret value, asking each pipeline to have it as env variable is cumbersome and makes rotating the keys
+    # challenging. Get both values from secrets manager as a pair instead.
+    if [[ -z "${WIZ_API_ID}" ]]; then
+        WIZ_API_DETAILS=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-details --query "SecretString" --output text)
+        WIZ_API_ID=${WIZ_API_DETAILS%:*}
+        WIZ_API_SECRET=${WIZ_API_DETAILS#*:}
+    else
+        WIZ_API_SECRET=$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-api-secret --query "SecretString" --output text)
+    fi
+    docker run \
+        --rm -it \
+        --mount type=bind,src="$WIZ_DIR",dst=/cli \
+        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        auth --id="$WIZ_API_ID" --secret "$WIZ_API_SECRET"
+    # check that wiz-auth work expected, and a file in WIZ_DIR is created
+    if [ -z "$(ls -A "$WIZ_DIR")" ]; then
+        echo "Wiz authentication failed, please confirm that credentials are set for WIZ_API_ID and WIZ_API_SECRET"
+        exit 1
+    fi
+}
+
 function validate_wiz_client_credentials() {
     local missing_vars=()
 
@@ -108,7 +132,8 @@ function validate_wiz_client_credentials() {
 
     if [ ${#missing_vars[@]} -gt 0 ]; then
         echo "+++ 🚨 The following required environment variables are not set: ${missing_vars[*]}" >&2
-        exit 1
+        echo "Falling back to using WIZ_API_ID and WIZ_API_SECRET"
+        setupWiz
     fi
 }
 

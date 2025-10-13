@@ -124,19 +124,6 @@ function setupWiz() {
     fi
 }
 
-function validate_wiz_client_credentials() {
-    local missing_vars=()
-
-    [ -z "${WIZ_CLIENT_ID:-}" ] && missing_vars+=("WIZ_CLIENT_ID")
-    [ -z "${WIZ_CLIENT_SECRET:-}" ] && missing_vars+=("WIZ_CLIENT_SECRET")
-
-    if [ ${#missing_vars[@]} -gt 0 ]; then
-        echo "+++ 🚨 The following required environment variables are not set: ${missing_vars[*]}" >&2
-        echo "Falling back to using WIZ_API_ID and WIZ_API_SECRET"
-        setupWiz
-    fi
-}
-
 # Use WIZ_CLIENT_ID and WIZ_CLIENT_SECRET environment variables to authenticate to Wiz and get auth file
 # $1 - Wiz CLI Container Image 
 # $2 - Directory to store auth file
@@ -155,24 +142,7 @@ function get_wiz_auth_file() {
     fi
 
     echo "Setting up and authenticating wiz"
-    validate_wiz_client_credentials
-    mkdir -p "$wiz_dir"
-
-    docker run \
-        --rm \
-        --mount type=bind,src="${wiz_dir}",dst=/cli \
-        -e WIZ_CLIENT_ID \
-        -e WIZ_CLIENT_SECRET \
-        "${wiz_container_image}" \
-        auth
-
-    # check that wiz-auth work expected, and a file in WIZ_DIR is created
-    if [ -z "$(ls -A "${wiz_dir}")" ]; then
-        echo "+++ 🚨 Wiz authentication failed, please confirm the credentials are set for WIZ_CLIENT_ID and WIZ_CLIENT_SECRET" >&2
-        exit 1
-    else
-        echo "Authenticated successfully"
-    fi
+    setupWiz
 }
 
 # Create a Buildkite Annotation from a scan results

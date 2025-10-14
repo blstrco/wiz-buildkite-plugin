@@ -227,11 +227,11 @@ function docker_image_scan() {
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
-        build_annotation "docker" "$image_name" true "$PWD/docker-scan-result" | execute_annotation 'ctx-wiz-docker-success' 'success'
+        build_annotation "docker" "$image_name" true "result/output" | execute_annotation 'ctx-wiz-docker-success' 'success'
         exit 0
         ;;
     *)
-        build_annotation "docker" "$image_name" false "$PWD/docker-scan-result" | execute_annotation 'ctx-wiz-docker-warning' 'warning'
+        build_annotation "docker" "$image_name" true "result/output" | execute_annotation 'ctx-wiz-docker-warning' 'warning'
         exit 0
         ;;
     esac
@@ -324,6 +324,7 @@ function dir_scan() {
     case $exit_code in
     0)
         build_annotation "dir" "$BUILDKITE_LABEL" true "result/output" | execute_annotation 'ctx-wiz-dir-success' 'success'
+        exit 0
         ;;
     *)
         build_annotation "dir" "$BUILDKITE_LABEL" false "result/output" | execute_annotation 'ctx-wiz-dir-warning' 'warning'

@@ -174,11 +174,6 @@ EOF
 # $2 - style
 # stdin - annotation content
 function execute_annotation() {
-    # If WIZ_ANNOTATIONS is set to false, skip executing the annotation command
-    if [[ "${WIZ_ANNOTATIONS:-true}" == "false" ]]; then
-        return
-    fi
-
     local context="${1:-}"
     local style="${2:-}"
     
@@ -223,13 +218,27 @@ function docker_image_scan() {
     local image_name
     image_name="$(echo "$image" | cut -d "/" -f 2)"
     
-    if [[ $exit_code -eq 0 ]]; then
+    if [[ $exit_code -eq 0 ]] && [[ "${WIZ_ANNOTATIONS:-false}" == "true" ]]; then
         build_annotation "docker" "$image_name" true "result/output" | execute_annotation 'ctx-wiz-docker-success' 'success'
     else
         build_annotation "docker" "$image_name" false "result/output" | execute_annotation 'ctx-wiz-docker-warning' 'warning'
     fi
 
-    exit $exit_code
+    exit_code="$?"
+    # FIXME: Linktree Specific Env. Var.
+    # buildkite-agent artifact upload docker-scan-result --log-level info
+    case $exit_code in
+    0)
+        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
+            buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        fi
+        exit 0
+        ;;
+    *)
+        buildAnnotation "docker" "$image_name" false "$PWD/docker-scan-result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
+        exit 0
+        ;;
+    esac
 }
 
 # IaC Scan
@@ -257,7 +266,7 @@ function iac_scan() {
         --path "/scan/$file_path" \
         "${cli_args[@]}" || exit_code=$?
 
-    if [[ $exit_code -eq 0 ]]; then
+    if [[ $exit_code -eq 0 ]] && [[ "${WIZ_ANNOTATIONS:-false}" == "true" ]]; then
         build_annotation "iac" "$BUILDKITE_LABEL" true "result/output" | execute_annotation 'ctx-wiz-iac-success' 'success'
     else
         build_annotation "iac" "$BUILDKITE_LABEL" false "result/output" | execute_annotation 'ctx-wiz-iac-warning' 'warning'
@@ -267,7 +276,21 @@ function iac_scan() {
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
 
-    exit $exit_code
+    exit_code="$?"
+    # FIXME: Linktree Specific Env. Var.
+    # buildkite-agent artifact upload docker-scan-result --log-level info
+    case $exit_code in
+    0)
+        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
+            buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        fi
+        exit 0
+        ;;
+    *)
+        buildAnnotation "docker" "$image_name" false "$PWD/docker-scan-result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
+        exit 0
+        ;;
+    esac
 }
 
 # Directory Scan
@@ -295,7 +318,7 @@ function dir_scan() {
         --path "/scan/$file_path" \
         "${cli_args[@]}" || exit_code=$?
     
-    if [[ $exit_code -eq 0 ]]; then
+    if [[ $exit_code -eq 0 ]] && [[ "${WIZ_ANNOTATIONS:-false}" == "true" ]]; then
         build_annotation "dir" "$BUILDKITE_LABEL" true "result/output" | execute_annotation 'ctx-wiz-dir-success' 'success'
     else
         build_annotation "dir" "$BUILDKITE_LABEL" false "result/output" | execute_annotation 'ctx-wiz-dir-warning' 'warning'
@@ -305,6 +328,20 @@ function dir_scan() {
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
 
-    exit $exit_code
+    exit_code="$?"
+    # FIXME: Linktree Specific Env. Var.
+    # buildkite-agent artifact upload docker-scan-result --log-level info
+    case $exit_code in
+    0)
+        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
+            buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        fi
+        exit 0
+        ;;
+    *)
+        buildAnnotation "docker" "$image_name" false "$PWD/docker-scan-result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
+        exit 0
+        ;;
+    esac
 }
 

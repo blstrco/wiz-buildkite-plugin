@@ -223,6 +223,8 @@ function docker_image_scan() {
     fi
 
     exit_code="$?"
+
+    echo "exit_code: $exit_code"
     # FIXME: Linktree Specific Env. Var.
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
@@ -271,6 +273,8 @@ function iac_scan() {
     fi
 
     exit_code="$?"
+
+    echo "exit_code: $exit_code"
     # FIXME: Linktree Specific Env. Var.
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
@@ -319,6 +323,8 @@ function dir_scan() {
     fi
 
     exit_code="$?"
+
+    echo "exit_code: $exit_code"
     # FIXME: Linktree Specific Env. Var.
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in

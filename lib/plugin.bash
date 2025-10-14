@@ -174,6 +174,11 @@ EOF
 # $2 - style
 # stdin - annotation content
 function execute_annotation() {
+    # If WIZ_ANNOTATIONS is set to false, don't execute the annotation command
+    if [[ "${WIZ_ANNOTATIONS:-true}" == "false" ]]; then
+        return 0
+    fi
+    
     local context="${1:-}"
     local style="${2:-}"
     

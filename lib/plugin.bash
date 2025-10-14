@@ -216,7 +216,7 @@ function docker_image_scan() {
         --driver mount \
         --policy-hits-only \
         -f human \
-        -o /result/output,human,true \
+        -o /scan/result/output,human,true \
         "${cli_args[@]}"
     exit_code="$?"
 
@@ -231,7 +231,6 @@ function docker_image_scan() {
 
     echo "exit_code: $exit_code"
     # FIXME: Linktree Specific Env. Var.
-    # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
         build_annotation "docker" "$image_name" true "result/output" | execute_annotation 'ctx-wiz-docker-success' 'success'
@@ -281,7 +280,6 @@ function iac_scan() {
 
     echo "exit_code: $exit_code"
     # FIXME: Linktree Specific Env. Var.
-    # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
         build_annotation "iac" "$BUILDKITE_LABEL" true "result/output" | execute_annotation 'ctx-wiz-iac-success' 'success'
@@ -331,7 +329,6 @@ function dir_scan() {
 
     echo "exit_code: $exit_code"
     # FIXME: Linktree Specific Env. Var.
-    # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
         build_annotation "dir" "$BUILDKITE_LABEL" true "result/output" | execute_annotation 'ctx-wiz-dir-success' 'success'

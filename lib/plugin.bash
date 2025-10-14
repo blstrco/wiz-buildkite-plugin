@@ -206,10 +206,11 @@ function docker_image_scan() {
 
     local -i exit_code=0
     docker run \
-        --rm \
+        --rm -it \
+        --cap-add SYS_ADMIN \
         --mount type=bind,src="$wiz_dir",dst=/cli,readonly \
-        --mount type=bind,src="$PWD",dst=/scan \
-        --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
+        --mount type=bind,src=/var/lib/docker,dst=/var/lib/docker \
+        --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
         "${wiz_cli_container_image}" \
         docker scan --image "$image" \
         --driver mount \

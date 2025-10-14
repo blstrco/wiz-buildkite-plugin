@@ -174,7 +174,7 @@ EOF
 # $2 - style
 # stdin - annotation content
 function execute_annotation() {
-    # If WIZ_ANNOTATIONS is set to true, execute the annotation command
+    # If WIZ_ANNOTATIONS is set to false, skip executing the annotation command
     if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
         return 0
     fi

@@ -215,8 +215,6 @@ function docker_image_scan() {
         docker scan --image "$image" \
         --driver mount \
         --policy-hits-only \
-        -f human \
-        -o /scan/result/output,human,true \
         "${cli_args[@]}"
     exit_code="$?"
 

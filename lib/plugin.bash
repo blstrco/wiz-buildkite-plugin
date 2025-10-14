@@ -227,9 +227,7 @@ function docker_image_scan() {
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
-        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
-            build_annotation "docker" "$image_name" true "$PWD/docker-scan-result" | execute_annotation 'ctx-wiz-docker-success' 'success'
-        fi
+        build_annotation "docker" "$image_name" true "$PWD/docker-scan-result" | execute_annotation 'ctx-wiz-docker-success' 'success'
         exit 0
         ;;
     *)
@@ -277,9 +275,7 @@ function iac_scan() {
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
-        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
-            build_annotation "iac" "$BUILDKITE_LABEL" true "result/output" | execute_annotation 'ctx-wiz-iac-success' 'success'
-        fi
+        build_annotation "iac" "$BUILDKITE_LABEL" true "result/output" | execute_annotation 'ctx-wiz-iac-success' 'success'
         exit 0
         ;;
     *)
@@ -327,9 +323,7 @@ function dir_scan() {
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
     0)
-        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 
         build_annotation "dir" "$BUILDKITE_LABEL" true "result/output" | execute_annotation 'ctx-wiz-dir-success' 'success'
-        fi
         ;;
     *)
         build_annotation "dir" "$BUILDKITE_LABEL" false "result/output" | execute_annotation 'ctx-wiz-dir-warning' 'warning'

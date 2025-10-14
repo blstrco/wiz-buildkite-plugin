@@ -214,7 +214,10 @@ function docker_image_scan() {
         docker scan --image "$image" \
         --driver mount \
         --policy-hits-only \
-        "${cli_args[@]}" || exit_code=$?
+        -f human \
+        -o /scan/docker-scan-result,human,true \
+        "${cli_args[@]}"
+    exit_code="$?"
 
     local image_name
     image_name="$(echo "$image" | cut -d "/" -f 2)"

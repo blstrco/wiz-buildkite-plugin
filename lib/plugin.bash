@@ -176,7 +176,7 @@ EOF
 function execute_annotation() {
     # If WIZ_ANNOTATIONS is set to false, skip executing the annotation command
     if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
-        return 0
+        return
     fi
 
     local context="${1:-}"

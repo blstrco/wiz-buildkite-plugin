@@ -212,6 +212,7 @@ function docker_image_scan() {
         --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock,readonly \
         "${wiz_cli_container_image}" \
         docker scan --image "$image" \
+        --driver mount \
         --policy-hits-only \
         "${cli_args[@]}" || exit_code=$?
 

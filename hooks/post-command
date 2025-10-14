@@ -86,6 +86,11 @@ dockerImageScan() {
         -o /scan/docker-scan-result,human,true
     exit_code="$?"
     image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
+
+    if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
+        exit 0
+    fi
+
     # FIXME: Linktree Specific Env. Var.
     # buildkite-agent artifact upload docker-scan-result --log-level info
     case $exit_code in
@@ -116,6 +121,11 @@ iacScan() {
         --types 'Cloudformation' \
         --path "/scan/templates"
     exit_code="$?"
+
+    if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
+        exit 0
+    fi
+
     case $exit_code in
     0)
         if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS}" ]]; then 

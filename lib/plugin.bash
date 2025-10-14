@@ -218,7 +218,7 @@ function docker_image_scan() {
     local image_name
     image_name="$(echo "$image" | cut -d "/" -f 2)"
     
-    if [[ "${WIZ_ANNOTATIONS:-false}" == "true" ]]; then
+    if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
         exit 0
     fi
 
@@ -268,7 +268,7 @@ function iac_scan() {
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
 
-    if [[ "${WIZ_ANNOTATIONS:-false}" == "true" ]]; then
+    if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
         exit 0
     fi
 
@@ -318,7 +318,7 @@ function dir_scan() {
     # this post step will be used in template to check the step was run
     echo "${BUILDKITE_BUILD_ID}" >check-file && buildkite-agent artifact upload check-file
 
-    if [[ "${WIZ_ANNOTATIONS:-false}" == "true" ]]; then
+    if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
         exit 0
     fi
 

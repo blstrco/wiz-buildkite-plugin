@@ -122,6 +122,10 @@ iacScan() {
         --path "/scan/templates"
     exit_code="$?"
 
+    # buildkite-agent artifact upload "result/**/*" --log-level info
+    # this post step will be used in template to check the step was run
+    echo "${BUILDKITE_BUILD_ID}" > check-file && buildkite-agent artifact upload check-file
+
     if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
         exit 0
     fi
@@ -136,9 +140,6 @@ iacScan() {
         buildAnnotation "iac" "$BUILDKITE_LABEL" false "$PWD/result/output" | buildkite-agent annotate --append --context 'ctx-wiz-iac-warning' --style 'warning'
         ;;
     esac
-    # buildkite-agent artifact upload "result/**/*" --log-level info
-    # this post step will be used in template to check the step was run
-    echo "${BUILDKITE_BUILD_ID}" > check-file && buildkite-agent artifact upload check-file
 }
 
 case "${SCAN_TYPE}" in

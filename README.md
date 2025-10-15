@@ -50,6 +50,12 @@ steps:
           path: "infrastructure/cdk.out"
 ```
 
+## Environment Variables
+
+`WIZ_API_ID` - This is the Wiz Client ID that is used to authenticate with Wiz. This can be found in the Integration settings.
+
+`WIZ_ANNOTATIONS` - Defaults to false, but to enable Buildkite Annotations in your builds set this to true.
+
 ## Configuration
 
 ### `scan-type` (Required, string) : 'docker | iac'

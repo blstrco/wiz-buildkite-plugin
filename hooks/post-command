@@ -122,8 +122,14 @@ iacScan() {
         iac scan \
         --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
         --types 'Cloudformation' \
-        --path "/scan/templates"
+        --path "/scan/templates" \
+        --log /scan/wizcli-debug.log
     exit_code="$?"
+    
+    # Output debug log for troubleshooting
+    echo "=== wizcli debug log ==="
+    cat wizcli-debug.log 2>/dev/null || echo "Warning: Could not read wizcli-debug.log"
+    echo "=== end wizcli debug log ==="
 
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run

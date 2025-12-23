@@ -26,6 +26,9 @@ fi
 setupWiz() {
     echo "Setting up and authenticating wiz"
     mkdir -p "$WIZ_DIR"
+    # Output wizcli version for debugging/tracking purposes
+    echo "Checking wizcli version..."
+    docker run --rm wiziocli.azurecr.io/wizcli:latest-amd64 version || echo "Warning: Could not retrieve wizcli version"
     # even though WIZ_API_ID is not a secret value, asking each pipeline to have it as env variable is cumbersome and makes rotating the keys
     # challenging. Get both values from secrets manager as a pair instead.
     if [[ -z "${WIZ_API_ID}" ]]; then

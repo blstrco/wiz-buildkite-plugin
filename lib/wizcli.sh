@@ -53,9 +53,9 @@ dirScan() {
         scan dir "/scan/${SCAN_PATH}" \
         --client-id "$WIZ_CLIENT_ID" \
         --client-secret "$WIZ_CLIENT_SECRET" \
-        --policy-hits-only \
-        -f human \
-        -o /scan/dir-scan-result,human,true
+        --by-policy-hits=BLOCK \
+        --stdout=human \
+        --human-output-file=/scan/dir-scan-result
     exit_code="$?"
 
     if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then

@@ -40,6 +40,7 @@ setupWizCli() {
 
 dirScan() {
     SCAN_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
+    SCAN_NAME="${BUILDKITE_PIPELINE_SLUG:-pipeline}:${BUILDKITE_BUILD_NUMBER:-0}:${BUILDKITE_JOB_ID:-job}"
     if [[ -z "${SCAN_PATH}" ]]; then
         echo "Missing path. Directory scans require a path to the directory to scan."
         return 1
@@ -51,6 +52,7 @@ dirScan() {
         --mount type=bind,src="$PWD",dst=/scan \
         "$WIZCLI_LOCAL_TAG" \
         scan dir "/scan/${SCAN_PATH}" \
+        --name "$SCAN_NAME" \
         --client-id "$WIZ_CLIENT_ID" \
         --client-secret "$WIZ_CLIENT_SECRET" \
         --by-policy-hits=BLOCK \

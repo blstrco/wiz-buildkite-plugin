@@ -111,11 +111,12 @@ iacScan() {
     mkdir -p result templates
     # only scan templates
     cp "$CDK_PATH"/*.template.json templates
+    # TODO: migrate to wiz cli, this is a temporary fix to get the scan to work
     docker run \
         --rm -it \
         --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
         --mount type=bind,src="$PWD",dst=/scan \
-        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        wiziocli.azurecr.io/wizcli:0.106.0-amd64-58ac5a4b74972bf67de8a8af66a550d901a08de7 \
         iac scan \
         --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
         --types 'Cloudformation' \

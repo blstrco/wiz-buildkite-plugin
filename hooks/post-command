@@ -38,7 +38,7 @@ setupWiz() {
     docker run \
         --rm -it \
         --mount type=bind,src="$WIZ_DIR",dst=/cli \
-        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        wiziocli.azurecr.io/wizcli:0.106.0-amd64-58ac5a4b74972bf67de8a8af66a550d901a08de7 \
         auth --id="$WIZ_API_ID" --secret "$WIZ_API_SECRET"
     # check that wiz-auth work expected, and a file in WIZ_DIR is created
     if [ -z "$(ls -A "$WIZ_DIR")" ]; then
@@ -78,7 +78,7 @@ dockerImageScan() {
         --mount type=bind,src="$PWD",dst=/scan \
         --mount type=bind,src=/var/lib/docker,dst=/var/lib/docker \
         --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
-        wiziocli.azurecr.io/wizcli:latest-amd64 \
+        wiziocli.azurecr.io/wizcli:0.106.0-amd64-58ac5a4b74972bf67de8a8af66a550d901a08de7 \
         docker scan --image "$IMAGE" \
         --driver mount \
         --policy-hits-only \

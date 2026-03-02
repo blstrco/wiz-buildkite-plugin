@@ -38,8 +38,21 @@ setupWizCli() {
     fi
 }
 
+buildScanName() {
+    local repo_name="${BUILDKITE_PIPELINE_SLUG:-repo}"
+    local branch_name="${BUILDKITE_BRANCH:-branch}"
+    local commit_short="${BUILDKITE_COMMIT:-unknown}"
+    local build_number="${BUILDKITE_BUILD_NUMBER:-0}"
+
+    branch_name="${branch_name//\//-}"
+    commit_short="${commit_short:0:8}"
+
+    echo "${repo_name}:${branch_name}:${commit_short}:${build_number}"
+}
+
 dirScan() {
     SCAN_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
+    SCAN_NAME="$(buildScanName)"
     if [[ -z "${SCAN_PATH}" ]]; then
         echo "Missing path. Directory scans require a path to the directory to scan."
         return 1
@@ -51,7 +64,7 @@ dirScan() {
         --mount type=bind,src="$PWD",dst=/scan \
         "$WIZCLI_LOCAL_TAG" \
         scan dir "/scan/${SCAN_PATH}" \
-        --name "$BUILDKITE_JOB_ID" \
+        --name "$SCAN_NAME" \
         --client-id "$WIZ_CLIENT_ID" \
         --client-secret "$WIZ_CLIENT_SECRET" \
         --by-policy-hits=BLOCK \

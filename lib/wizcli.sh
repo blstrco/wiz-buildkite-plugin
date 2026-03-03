@@ -41,13 +41,11 @@ setupWizCli() {
 buildScanName() {
     local repo_name="${BUILDKITE_PIPELINE_SLUG:-repo}"
     local branch_name="${BUILDKITE_BRANCH:-branch}"
-    local commit_short="${BUILDKITE_COMMIT:-unknown}"
     local build_number="${BUILDKITE_BUILD_NUMBER:-0}"
 
     branch_name="${branch_name//\//-}"
-    commit_short="${commit_short:0:8}"
 
-    echo "${repo_name}:${branch_name}:${commit_short}:${build_number}"
+    echo "${repo_name}:${branch_name}:${build_number}"
 }
 
 dirScan() {

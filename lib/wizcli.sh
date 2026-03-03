@@ -53,7 +53,10 @@ buildGithubPrUrl() {
         return 0
     fi
 
-    echo "${BUILDKITE_PULL_REQUEST_REPO%/}/pull/${BUILDKITE_PULL_REQUEST}"
+    local pr_repo="${BUILDKITE_PULL_REQUEST_REPO%/}"
+    pr_repo="${pr_repo%.git}"
+
+    echo "${pr_repo}/pull/${BUILDKITE_PULL_REQUEST}"
 }
 
 dirScan() {

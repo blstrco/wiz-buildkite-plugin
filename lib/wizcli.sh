@@ -8,14 +8,14 @@ setupWizCli() {
 
     if [[ -z "${WIZ_DIR:-}" ]]; then
         echo "WIZ_DIR is not set"
-        return 1
+        exit 1
     fi
 
     mkdir -p "$WIZ_DIR"
 
     if ! docker pull "$WIZCLI_IMAGE"; then
         echo "Failed to pull Wiz CLI image"
-        return 1
+        exit 1
     fi
 
     docker tag "$WIZCLI_IMAGE" "$WIZCLI_LOCAL_TAG"
@@ -26,7 +26,7 @@ setupWizCli() {
     WIZ_API_DETAILS="$(aws secretsmanager get-secret-value --secret-id global/buildkite/wiz-cli-credentials --query "SecretString" --output text)"
     if [[ -z "$WIZ_API_DETAILS" ]]; then
         echo "Failed to retrieve Wiz API credentials from Secrets Manager"
-        return 1
+        exit 1
     fi
 
     WIZ_CLIENT_ID="$(jq -r '.client_id' <<<"$WIZ_API_DETAILS")"
@@ -34,7 +34,7 @@ setupWizCli() {
 
     if [[ -z "$WIZ_CLIENT_ID" || "$WIZ_CLIENT_ID" == "null" || -z "$WIZ_CLIENT_SECRET" || "$WIZ_CLIENT_SECRET" == "null" ]]; then
         echo "Failed to parse client_id or client_secret from Wiz API credentials"
-        return 1
+        exit 1
     fi
 }
 

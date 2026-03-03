@@ -48,12 +48,25 @@ buildScanName() {
     echo "${repo_name}:${branch_name}:${build_number}"
 }
 
+buildGithubPrUrl() {
+    if [[ "${BUILDKITE_PULL_REQUEST:-false}" == "false" || -z "${BUILDKITE_PULL_REQUEST_REPO:-}" ]]; then
+        return 0
+    fi
+
+    echo "${BUILDKITE_PULL_REQUEST_REPO%/}/pull/${BUILDKITE_PULL_REQUEST}"
+}
+
 dirScan() {
     SCAN_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
     SCAN_NAME="$(buildScanName)"
+    GITHUB_PR_URL="$(buildGithubPrUrl)"
+    PR_TAG_ARG=()
     if [[ -z "${SCAN_PATH}" ]]; then
         echo "Missing path. Directory scans require a path to the directory to scan."
         return 1
+    fi
+    if [[ -n "${GITHUB_PR_URL}" ]]; then
+        PR_TAG_ARG=(--tags "github_pr_url=${GITHUB_PR_URL}")
     fi
 
     echo "--- :wiz: Running Wiz CLI directory scan on ${SCAN_PATH}"
@@ -63,11 +76,13 @@ dirScan() {
         "$WIZCLI_LOCAL_TAG" \
         scan dir "/scan/${SCAN_PATH}" \
         --name "$SCAN_NAME" \
+        --tags "buildkite_url=${BUILDKITE_BUILD_URL}" \
         --client-id "$WIZ_CLIENT_ID" \
         --client-secret "$WIZ_CLIENT_SECRET" \
         --by-policy-hits=BLOCK \
         --stdout=human \
-        --human-output-file=/scan/dir-scan-result
+        --human-output-file=/scan/dir-scan-result \
+        "${PR_TAG_ARG[@]}"
     exit_code="$?"
 
     if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then

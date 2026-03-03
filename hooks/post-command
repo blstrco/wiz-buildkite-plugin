@@ -28,6 +28,9 @@ fi
 setupWiz() {
     echo "Setting up and authenticating wiz"
     mkdir -p "$WIZ_DIR"
+    # Output wizcli version for debugging/tracking purposes
+    echo "Checking wizcli version..."
+    docker run --rm wiziocli.azurecr.io/wizcli:latest-amd64 version || echo "Warning: Could not retrieve wizcli version"
     # even though WIZ_API_ID is not a secret value, asking each pipeline to have it as env variable is cumbersome and makes rotating the keys
     # challenging. Get both values from secrets manager as a pair instead.
     if [[ -z "${WIZ_API_ID}" ]]; then
@@ -123,11 +126,23 @@ iacScan() {
         --mount type=bind,src="$WIZ_DIR",dst=/cli,readonly \
         --mount type=bind,src="$PWD",dst=/scan \
         wiziocli.azurecr.io/wizcli:latest-amd64 \
+        --log /scan/result/wizcli-debug.log \
         iac scan \
         --name "$BUILDKITE_JOB_ID" -f human -o /scan/result/output,human \
         --types 'Cloudformation' \
         --path "/scan/templates"
     exit_code="$?"
+    
+    # Output debug log for troubleshooting (tail to avoid huge logs)
+    echo "=== wizcli debug log ==="
+    if [ -f result/wizcli-debug.log ]; then
+        tail -n 200 result/wizcli-debug.log
+        buildkite-agent artifact upload result/wizcli-debug.log || true
+    else
+        echo "Warning: wizcli-debug.log not found"
+        ls -la result/ 2>/dev/null || echo "result/ directory not found"
+    fi
+    echo "=== end wizcli debug log ==="
 
     # buildkite-agent artifact upload "result/**/*" --log-level info
     # this post step will be used in template to check the step was run

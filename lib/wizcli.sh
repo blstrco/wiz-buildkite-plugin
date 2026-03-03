@@ -59,18 +59,30 @@ buildGithubPrUrl() {
     echo "${pr_repo}/pull/${BUILDKITE_PULL_REQUEST}"
 }
 
+buildScanTags() {
+    local tags=("buildkite_url=${BUILDKITE_BUILD_URL}")
+    local github_pr_url
+    github_pr_url="$(buildGithubPrUrl)"
+
+    if [[ -n "${github_pr_url}" ]]; then
+        tags+=("github_pr_url=${github_pr_url}")
+    fi
+
+    printf '%s\n' "${tags[@]}"
+}
+
 dirScan() {
     SCAN_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
     SCAN_NAME="$(buildScanName)"
-    GITHUB_PR_URL="$(buildGithubPrUrl)"
-    PR_TAG_ARG=()
+    TAG_ARGS=()
     if [[ -z "${SCAN_PATH}" ]]; then
         echo "Missing path. Directory scans require a path to the directory to scan."
         return 1
     fi
-    if [[ -n "${GITHUB_PR_URL}" ]]; then
-        PR_TAG_ARG=(--tags "github_pr_url=${GITHUB_PR_URL}")
-    fi
+
+    while IFS= read -r tag; do
+        TAG_ARGS+=(--tags "${tag}")
+    done < <(buildScanTags)
 
     echo "--- :wiz: Running Wiz CLI directory scan on ${SCAN_PATH}"
     docker run \
@@ -79,13 +91,12 @@ dirScan() {
         "$WIZCLI_LOCAL_TAG" \
         scan dir "/scan/${SCAN_PATH}" \
         --name "$SCAN_NAME" \
-        --tags "buildkite_url=${BUILDKITE_BUILD_URL}" \
         --client-id "$WIZ_CLIENT_ID" \
         --client-secret "$WIZ_CLIENT_SECRET" \
         --by-policy-hits=BLOCK \
         --stdout=human \
         --human-output-file=/scan/dir-scan-result \
-        "${PR_TAG_ARG[@]}"
+        "${TAG_ARGS[@]}"
     exit_code="$?"
 
     if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then

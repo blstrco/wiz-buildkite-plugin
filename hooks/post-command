@@ -120,7 +120,8 @@ iac)
     dirScan
     ;;
 docker)
-    setupWiz
-    dockerImageScan
+    source "${BASEDIR}/lib/wizcli.sh"
+    setupWizCli
+    dockerScan
     ;;
 esac

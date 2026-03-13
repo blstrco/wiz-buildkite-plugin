@@ -71,6 +71,59 @@ buildScanTags() {
     printf '%s\n' "${tags[@]}"
 }
 
+dockerScan() {
+    IMAGE="${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}"
+    SCAN_NAME="$(buildScanName)"
+    TAG_ARGS=()
+
+    if [[ -z "${IMAGE}" ]]; then
+        echo "Missing image address, docker scans require an address to pull the image"
+        return 1
+    fi
+
+    while IFS= read -r tag; do
+        TAG_ARGS+=(--tags "${tag}")
+    done < <(buildScanTags)
+
+    # Make sure local docker has the image
+    echo "--- :wiz: Pulling image ${IMAGE}"
+    docker pull "$IMAGE"
+
+    echo "--- :wiz: Running Wiz CLI docker scan on ${IMAGE}"
+    docker run \
+        --rm \
+        --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+        --mount type=bind,src="$PWD",dst=/scan \
+        "$WIZCLI_LOCAL_TAG" \
+        scan docker "$IMAGE" \
+        --name "$SCAN_NAME" \
+        --client-id "$WIZ_CLIENT_ID" \
+        --client-secret "$WIZ_CLIENT_SECRET" \
+        --by-policy-hits=BLOCK \
+        --stdout=human \
+        --human-output-file=/scan/docker-scan-result \
+        "${TAG_ARGS[@]}"
+    exit_code="$?"
+    image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
+
+    if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
+        return 0
+    fi
+
+    case $exit_code in
+    0)
+        if [[ -n "${BUILDKITE_PLUGIN_WIZ_ANNOTATE_SUCCESS:-}" ]]; then
+            buildAnnotation "docker" "$image_name" true "$PWD/docker-scan-result" | buildkite-agent annotate --append --style 'success' --context 'ctx-wiz-docker-success'
+        fi
+        return 0
+        ;;
+    *)
+        buildAnnotation "docker" "$image_name" false "$PWD/docker-scan-result" | buildkite-agent annotate --append --context 'ctx-wiz-docker-warning' --style 'warning'
+        return 0
+        ;;
+    esac
+}
+
 dirScan() {
     SCAN_PATH="${BUILDKITE_PLUGIN_WIZ_PATH:-}"
     SCAN_NAME="$(buildScanName)"

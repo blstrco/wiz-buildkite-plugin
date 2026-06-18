@@ -67,7 +67,11 @@ The path to image file, if the `scan-type` is `docker`
 
 ### `path` (Optional, string)
 
-The path to `cdk.out` folder containing CloudFormation stack(s), if the `scan-type` is `iac`
+The path to the directory to scan, if the `scan-type` is `iac`. For a CloudFormation/IaC scan this is the `cdk.out` folder; for a dependency (library) scan this is the directory whose lockfiles/manifests should be scanned (e.g. `.` for the repo root).
+
+### `project` (Optional, string)
+
+The Wiz project ID to associate the scan with (forwarded to the Wiz CLI as `--project`). When set, scan results are linked to the given project in Wiz instead of only appearing under CI/CD Scans. Applies to both `iac` and `docker` scans.
 
 ## Developing
 

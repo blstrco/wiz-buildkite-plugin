@@ -75,6 +75,12 @@ EOF
 
 dockerImageScan() {
     IMAGE="${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}"
+
+    PROJECT_ARGS=()
+    if [[ -n "${BUILDKITE_PLUGIN_WIZ_PROJECT:-}" ]]; then
+        PROJECT_ARGS+=(--project "${BUILDKITE_PLUGIN_WIZ_PROJECT}")
+    fi
+
     # make sure local docker has the image
     docker pull "$IMAGE"
     docker run \
@@ -89,7 +95,8 @@ dockerImageScan() {
         --driver mount \
         --policy-hits-only \
         -f human \
-        -o /scan/docker-scan-result,human,true
+        -o /scan/docker-scan-result,human,true \
+        "${PROJECT_ARGS[@]}"
     exit_code="$?"
     image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
 

@@ -84,6 +84,11 @@ dirScan() {
         TAG_ARGS+=(--tags "${tag}")
     done < <(buildScanTags)
 
+    PROJECT_ARGS=()
+    if [[ -n "${BUILDKITE_PLUGIN_WIZ_PROJECT:-}" ]]; then
+        PROJECT_ARGS+=(--project "${BUILDKITE_PLUGIN_WIZ_PROJECT}")
+    fi
+
     echo "--- :wiz: Running Wiz CLI directory scan on ${SCAN_PATH}"
     docker run \
         --rm \
@@ -96,6 +101,7 @@ dirScan() {
         --by-policy-hits=BLOCK \
         --stdout=human \
         --human-output-file=/scan/dir-scan-result \
+        "${PROJECT_ARGS[@]}" \
         "${TAG_ARGS[@]}"
     exit_code="$?"
 

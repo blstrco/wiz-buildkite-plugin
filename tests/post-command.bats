@@ -92,6 +92,52 @@ load "$BATS_PLUGIN_PATH/load.bash"
   unstub buildkite-agent
 }
 
+@test "Container image scan annotates an error and passes when Wiz CLI setup fails" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="registry.example.com/my-app:latest"
+  export WIZ_DIR="$BATS_TEST_TMPDIR/.wiz"
+  export WIZ_ANNOTATIONS="false"
+  local hook="$PWD/hooks/post-command"
+  cd "$BATS_TEST_TMPDIR"
+
+  stub aws 'echo ""'
+  stub docker \
+    ":: echo pulled" \
+    ":: echo tagged" \
+    ":: echo wizcli version"
+  stub buildkite-agent \
+    "annotate --append --style error --context ctx-wiz-docker-error : cat"
+
+  run "$hook"
+
+  assert_output --partial "Failed to retrieve Wiz API credentials"
+  assert_output --partial "Wiz Docker Image Scan for my-app:latest failed to run (Wiz CLI setup failed)"
+  assert_success
+
+  unstub docker
+  unstub buildkite-agent
+}
+
+@test "Dir scan fails when Wiz CLI setup fails" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="iac"
+  export BUILDKITE_PLUGIN_WIZ_PATH="my-app"
+  export WIZ_DIR="$BATS_TEST_TMPDIR/.wiz"
+
+  stub aws 'echo ""'
+  stub docker \
+    ":: echo pulled" \
+    ":: echo tagged" \
+    ":: echo wizcli version"
+
+  run "$PWD/hooks/post-command"
+
+  assert_output --partial "Failed to retrieve Wiz API credentials"
+  refute_output --partial "Running Wiz CLI directory scan"
+  assert_failure
+
+  unstub docker
+}
+
 @test "Dir scan fails without path" {
   export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="iac"
   export WIZ_DIR="$BATS_TEST_TMPDIR/.wiz"

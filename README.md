@@ -6,13 +6,13 @@ Scans your infrastructure-as-code Cloudformation stacks or docker images for sec
 
 ### Docker Scanning
 
-Add the following to your `pipeline.yml`, the plugin will pull the image, scan it using wiz and create a buildkite annotation with the results.
+Add the following to your `pipeline.yml`, the plugin will pull the image, scan it using Wiz CLI v1 (`wizcli scan container-image` with the `extract` driver, which reads the image through the Docker API and works with both the classic and the containerd image store) and create a buildkite annotation with the results.
+
+If the scan itself fails to run (for example authentication or image errors), the plugin always adds an `error` annotation with the scan output, regardless of `WIZ_ANNOTATIONS`. The step is not failed.
 
 ```yml
 steps:
   - command: ls
-    env:
-    - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
       - blstrco/wiz#v1.0.0:
           scan-type: 'docker'
@@ -36,8 +36,6 @@ To avoid adding build time overhead, you can add IaC scanning to your `cdk diff`
 ```yml
 steps:
   - command: ls
-    env:
-    - WIZ_API_ID: "<your-id-goes-here>"
     plugins:
       - docker-compose#v4.16.0:
         ...
@@ -52,7 +50,7 @@ steps:
 
 ## Environment Variables
 
-`WIZ_API_ID` - This is the Wiz Client ID that is used to authenticate with Wiz. This can be found in the Integration settings.
+Both scan types authenticate with the Wiz service account stored as JSON (`client_id`, `client_secret`) in the AWS Secrets Manager secret `global/buildkite/wiz-cli-credentials`.
 
 `WIZ_ANNOTATIONS` - Defaults to false, but to enable Buildkite Annotations in your builds set this to true.
 

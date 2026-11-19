@@ -18,4 +18,6 @@ configuration:
       type: string
     annotate-success:
       type: boolean
+    disabled-scanners:
+      type: string
   additionalProperties: false

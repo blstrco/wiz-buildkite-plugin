@@ -75,9 +75,12 @@ dockerImageScan() {
     RESULT_FILE="$PWD/docker-scan-result"
     SCAN_OUTPUT_FILE="$PWD/docker-scan-output"
 
-    PROJECT_ARGS=()
+    SCAN_ARGS=()
     if [[ -n "${BUILDKITE_PLUGIN_WIZ_PROJECT:-}" ]]; then
-        PROJECT_ARGS+=(--project "${BUILDKITE_PLUGIN_WIZ_PROJECT}")
+        SCAN_ARGS+=(--project "${BUILDKITE_PLUGIN_WIZ_PROJECT}")
+    fi
+    if [[ -n "${BUILDKITE_PLUGIN_WIZ_DISABLED_SCANNERS:-}" ]]; then
+        SCAN_ARGS+=(--disabled-scanners "${BUILDKITE_PLUGIN_WIZ_DISABLED_SCANNERS}")
     fi
 
     rm -f "$RESULT_FILE"
@@ -99,7 +102,7 @@ dockerImageScan() {
         --by-policy-hits=BLOCK \
         --stdout=human \
         --human-output-file=/scan/docker-scan-result \
-        "${PROJECT_ARGS[@]}" 2>&1 | tee "$SCAN_OUTPUT_FILE"
+        "${SCAN_ARGS[@]}" 2>&1 | tee "$SCAN_OUTPUT_FILE"
     exit_code="${PIPESTATUS[0]}"
     image_name=$(echo "$IMAGE" | cut -d "/" -f 2)
 

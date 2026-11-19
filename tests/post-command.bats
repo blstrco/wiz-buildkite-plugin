@@ -29,6 +29,32 @@ load "$BATS_PLUGIN_PATH/load.bash"
   assert_output --partial "wizcli:latest scan container-image ubuntu:22.04 --driver extract"
   assert_output --partial "--project my-project-id"
   refute_output --partial "/var/lib/docker"
+  refute_output --partial "--disabled-scanners"
+  assert_success
+
+  unstub docker
+}
+
+@test "Container image scan forwards disabled-scanners" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
+  export BUILDKITE_PLUGIN_WIZ_DISABLED_SCANNERS="Secret"
+  export WIZ_DIR="$BATS_TEST_TMPDIR/.wiz"
+  export WIZ_ANNOTATIONS="false"
+  local hook="$PWD/hooks/post-command"
+  cd "$BATS_TEST_TMPDIR"
+
+  stub aws 'echo "{\"client_id\":\"test-client\",\"client_secret\":\"test-secret\"}"'
+  stub docker \
+    ":: echo pulled" \
+    ":: echo tagged" \
+    ":: echo wizcli version" \
+    "pull ubuntu:22.04 : echo pulled image" \
+    ":: echo scan-args \"\$@\"; echo findings > docker-scan-result"
+
+  run "$hook"
+
+  assert_output --partial "--disabled-scanners Secret"
   assert_success
 
   unstub docker

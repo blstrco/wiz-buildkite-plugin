@@ -71,6 +71,20 @@ The path to the directory to scan, if the `scan-type` is `iac`. For a CloudForma
 
 The Wiz project ID to associate the scan with (forwarded to the Wiz CLI as `--project`). When set, scan results are linked to the given project in Wiz instead of only appearing under CI/CD Scans. Applies to both `iac` and `docker` scans.
 
+### `disabled-scanners` (Optional, string)
+
+Comma-separated Wiz CLI scanners to skip on a `docker` scan (forwarded as `--disabled-scanners`). Supported values: `Vulnerability`, `Secret`, `SensitiveData`, `SoftwareSupplyChain`, `Malware`. All scanners run by default. The `Secret` scanner can take most of the scan time on large images; for example, the monolith symfony image scanned in 35 seconds with `Secret` disabled, against about 14 minutes with it.
+
+```yml
+steps:
+  - command: ls
+    plugins:
+      - blstrco/wiz#v1.6.1:
+          scan-type: 'docker'
+          image-address: 'ubuntu:22.04'
+          disabled-scanners: 'Secret'
+```
+
 ## Developing
 
 To run the tests:

@@ -60,6 +60,53 @@ load "$BATS_PLUGIN_PATH/load.bash"
   unstub docker
 }
 
+@test "Container image scan reads the image from the variable named by image-env" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ENV="KAFKA_INGRESS_IMAGE"
+  export KAFKA_INGRESS_IMAGE="ubuntu:22.04"
+  export WIZ_DIR="$BATS_TEST_TMPDIR/.wiz"
+  export WIZ_ANNOTATIONS="false"
+  local hook="$PWD/hooks/post-command"
+  cd "$BATS_TEST_TMPDIR"
+
+  stub aws 'echo "{\"client_id\":\"test-client\",\"client_secret\":\"test-secret\"}"'
+  stub docker \
+    ":: echo pulled" \
+    ":: echo tagged" \
+    ":: echo wizcli version" \
+    "pull ubuntu:22.04 : echo pulled image" \
+    ":: echo scan-args \"\$@\"; echo findings > docker-scan-result"
+
+  run "$hook"
+
+  assert_output --partial "wizcli:latest scan container-image ubuntu:22.04 --driver extract"
+  assert_success
+
+  unstub docker
+}
+
+@test "Container image scan fails when the variable named by image-env is empty" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ENV="KAFKA_INGRESS_IMAGE"
+  unset KAFKA_INGRESS_IMAGE
+
+  run "$PWD/hooks/post-command"
+
+  assert_output --partial "Missing image address"
+  assert_failure
+}
+
+@test "Container image scan fails with both image-address and image-env" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ENV="KAFKA_INGRESS_IMAGE"
+
+  run "$PWD/hooks/post-command"
+
+  assert_output "Set either image-address or image-env, not both"
+  assert_failure
+}
+
 @test "Container image scan annotates an error when the scan itself fails, even with annotations disabled" {
   export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
   export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="registry.example.com/my-app:latest"

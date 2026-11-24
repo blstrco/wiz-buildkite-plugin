@@ -63,6 +63,26 @@ The scan type can be either docker or iac
 
 The path to image file, if the `scan-type` is `docker`
 
+### `image-env` (Optional, string)
+
+The name of an environment variable that holds the image address, if the `scan-type` is `docker`. Use it when
+an earlier plugin's hook exports the address, because plugin configuration such as `image-address` is not
+interpolated when the step runs. Set either `image-address` or `image-env`.
+
+```yml
+steps:
+  - command: docker-ecr-cache build kafka-ingress
+    plugins:
+      - ssh://git@github.com/blstrco/docker-ecr-cache-buildkite-plugin.git#v5.0.0:
+          repository: main.msk
+          images:
+            kafka-ingress:
+              context: services/msk/kafka_ingress
+      - blstrco/wiz#v1.7.0:
+          scan-type: 'docker'
+          image-env: KAFKA_INGRESS_IMAGE
+```
+
 ### `path` (Optional, string)
 
 The path to the directory to scan, if the `scan-type` is `iac`. For a CloudFormation/IaC scan this is the `cdk.out` folder; for a dependency (library) scan this is the directory whose lockfiles/manifests should be scanned (e.g. `.` for the repo root).

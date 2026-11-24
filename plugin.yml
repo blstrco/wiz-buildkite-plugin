@@ -22,4 +22,7 @@ configuration:
       type: boolean
     disabled-scanners:
       type: string
+    scan-interval-hours:
+      type: integer
+      minimum: 1
   additionalProperties: false

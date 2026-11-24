@@ -33,6 +33,26 @@ if [ "${SCAN_TYPE}" = "iac" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_PATH:-}" ]]; then
     exit 1
 fi
 
+SCAN_INTERVAL_HOURS="${BUILDKITE_PLUGIN_WIZ_SCAN_INTERVAL_HOURS:-}"
+if [[ -n "${SCAN_INTERVAL_HOURS}" && ! "${SCAN_INTERVAL_HOURS}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "scan-interval-hours must be a whole number of hours, at least 1"
+    exit 1
+fi
+
+# With scan-interval-hours, a completed docker scan is recorded as a tag on the scanned image, named by its digest
+# and by the current window of that many hours since the Unix epoch. The image is scanned again in the next
+# window, and new content under the same tag is always scanned.
+scanMarker() {
+    local repository="${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS%%@*}"
+    local digest window
+    if [[ "${repository##*/}" == *:* ]]; then
+        repository="${repository%:*}"
+    fi
+    digest="$(docker buildx imagetools inspect "${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS}" --format '{{.Manifest.Digest}}')" || return 1
+    window=$(($(date +%s) / 3600 / SCAN_INTERVAL_HOURS))
+    echo "${repository}:wiz-${digest#sha256:}-${window}"
+}
+
 #$1 type, $2 name, $3 pass/fail, $4 result file
 buildAnnotation() {
     annotation_file=${RANDOM:0:2}-annotation.md
@@ -123,6 +143,11 @@ dockerImageScan() {
         exit 0
     fi
 
+    if [[ -n "${SCAN_MARKER:-}" ]]; then
+        docker buildx imagetools create --tag "$SCAN_MARKER" "$IMAGE" ||
+            echo "Could not record the scan as ${SCAN_MARKER}, so the next build scans ${IMAGE} again"
+    fi
+
     if [[ "${WIZ_ANNOTATIONS:-false}" == "false" ]]; then
         exit 0
     fi
@@ -148,6 +173,12 @@ iac)
     dirScan
     ;;
 docker)
+    # A failed lookup leaves SCAN_MARKER empty, so the scan runs and reports its own error.
+    if [[ -n "${SCAN_INTERVAL_HOURS}" ]] && SCAN_MARKER="$(scanMarker)" &&
+        docker buildx imagetools inspect "$SCAN_MARKER" >/dev/null 2>&1; then
+        echo "--- :wiz: ${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS} was already scanned in this ${SCAN_INTERVAL_HOURS}-hour window"
+        exit 0
+    fi
     source "${BASEDIR}/lib/wizcli.sh"
     if ! setupWizCli; then
         echo "Wiz CLI setup failed: could not pull the Wiz CLI image or read its credentials. See the job log above." >"$PWD/docker-scan-output"

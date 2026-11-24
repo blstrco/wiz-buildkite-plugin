@@ -143,8 +143,9 @@ dockerImageScan() {
         exit 0
     fi
 
+    # Without --prefer-index=false, a single-platform image is wrapped in a new index, which is a new image.
     if [[ -n "${SCAN_MARKER:-}" ]]; then
-        docker buildx imagetools create --tag "$SCAN_MARKER" "$IMAGE" ||
+        docker buildx imagetools create --prefer-index=false --tag "$SCAN_MARKER" "$IMAGE" ||
             echo "Could not record the scan as ${SCAN_MARKER}, so the next build scans ${IMAGE} again"
     fi
 

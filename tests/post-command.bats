@@ -152,7 +152,7 @@ load "$BATS_PLUGIN_PATH/load.bash"
     ":: echo wizcli version" \
     "pull ubuntu:22.04 : echo pulled image" \
     ":: echo findings > docker-scan-result; exit 4" \
-    "buildx imagetools create --tag ${marker} ubuntu:22.04 : echo recorded scan"
+    "buildx imagetools create --prefer-index=false --tag ${marker} ubuntu:22.04 : echo recorded scan"
 
   run "$hook"
 

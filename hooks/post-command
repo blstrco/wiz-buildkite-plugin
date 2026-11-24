@@ -13,6 +13,16 @@ if [[ -z "${SCAN_TYPE}" ]]; then
     exit 1
 fi
 
+# Plugin configuration is not interpolated when the step runs, so image-env names a variable that an earlier
+# hook exports, such as the docker-ecr-cache plugin's <NAME>_IMAGE.
+if [[ -n "${BUILDKITE_PLUGIN_WIZ_IMAGE_ENV:-}" ]]; then
+    if [[ -n "${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}" ]]; then
+        echo "Set either image-address or image-env, not both"
+        exit 1
+    fi
+    BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="${!BUILDKITE_PLUGIN_WIZ_IMAGE_ENV:-}"
+fi
+
 if [ "${SCAN_TYPE}" = "docker" ] && [[ -z "${BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS:-}" ]]; then
     echo "Missing image address, docker scans require an adress to pull the image"
     exit 1

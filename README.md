@@ -105,6 +105,25 @@ steps:
           disabled-scanners: 'Secret'
 ```
 
+### `scan-interval-hours` (Optional, integer)
+
+Scan a `docker` image at most once per window of this many hours, counted from the Unix epoch in UTC (`24` is
+once per UTC day). After a scan completes, the plugin tags the scanned image in its registry with
+`wiz-<digest>-<window>`; while that tag exists, later builds skip the scan. New content is always scanned,
+because the tag names the image's digest. The tag points at the same image, so it adds no image to the
+registry, but the step needs permission to push to the image's repository. A scan that fails to run is not
+recorded, so the next build scans again.
+
+```yml
+steps:
+  - command: ls
+    plugins:
+      - blstrco/wiz#v1.8.0:
+          scan-type: 'docker'
+          image-address: '123456789012.dkr.ecr.us-west-2.amazonaws.com/my-app:1.2.3'
+          scan-interval-hours: 24
+```
+
 ## Developing
 
 To run the tests:

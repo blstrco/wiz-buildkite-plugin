@@ -107,6 +107,106 @@ load "$BATS_PLUGIN_PATH/load.bash"
   assert_failure
 }
 
+@test "Container image scan skips an image already scanned in the current scan-interval-hours window" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="registry.example.com:5000/my-app:1.2.3"
+  export BUILDKITE_PLUGIN_WIZ_SCAN_INTERVAL_HOURS="24"
+  local digest="sha256:$(printf 'a%.0s' {1..64})"
+  # 1795435200 is hour 498732, which is in 24-hour window 20780.
+  local marker="registry.example.com:5000/my-app:wiz-${digest#sha256:}-20780"
+
+  stub date "+%s : echo 1795435200"
+  stub docker \
+    "buildx imagetools inspect registry.example.com:5000/my-app:1.2.3 --format {{.Manifest.Digest}} : echo ${digest}" \
+    "buildx imagetools inspect ${marker} : true"
+
+  run "$PWD/hooks/post-command"
+
+  assert_output --partial "registry.example.com:5000/my-app:1.2.3 was already scanned in this 24-hour window"
+  refute_output --partial "Setting up Wiz CLI"
+  assert_success
+
+  unstub date
+  unstub docker
+}
+
+@test "Container image scan records a completed scan for scan-interval-hours" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
+  export BUILDKITE_PLUGIN_WIZ_SCAN_INTERVAL_HOURS="6"
+  export WIZ_DIR="$BATS_TEST_TMPDIR/.wiz"
+  export WIZ_ANNOTATIONS="false"
+  local digest="sha256:$(printf 'b%.0s' {1..64})"
+  # 1795435200 is hour 498732, which is in 6-hour window 83122.
+  local marker="ubuntu:wiz-${digest#sha256:}-83122"
+  local hook="$PWD/hooks/post-command"
+  cd "$BATS_TEST_TMPDIR"
+
+  stub date "+%s : echo 1795435200"
+  stub aws 'echo "{\"client_id\":\"test-client\",\"client_secret\":\"test-secret\"}"'
+  stub docker \
+    "buildx imagetools inspect ubuntu:22.04 --format {{.Manifest.Digest}} : echo ${digest}" \
+    "buildx imagetools inspect ${marker} : false" \
+    ":: echo pulled" \
+    ":: echo tagged" \
+    ":: echo wizcli version" \
+    "pull ubuntu:22.04 : echo pulled image" \
+    ":: echo findings > docker-scan-result; exit 4" \
+    "buildx imagetools create --prefer-index=false --tag ${marker} ubuntu:22.04 : echo recorded scan"
+
+  run "$hook"
+
+  assert_output --partial "recorded scan"
+  assert_success
+
+  unstub date
+  unstub docker
+}
+
+@test "Container image scan does not record a scan that failed to run" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
+  export BUILDKITE_PLUGIN_WIZ_SCAN_INTERVAL_HOURS="24"
+  export WIZ_DIR="$BATS_TEST_TMPDIR/.wiz"
+  export WIZ_ANNOTATIONS="false"
+  local digest="sha256:$(printf 'c%.0s' {1..64})"
+  local hook="$PWD/hooks/post-command"
+  cd "$BATS_TEST_TMPDIR"
+
+  stub date "+%s : echo 1795435200"
+  stub aws 'echo "{\"client_id\":\"test-client\",\"client_secret\":\"test-secret\"}"'
+  stub docker \
+    "buildx imagetools inspect ubuntu:22.04 --format {{.Manifest.Digest}} : echo ${digest}" \
+    "buildx imagetools inspect ubuntu:wiz-${digest#sha256:}-20780 : false" \
+    ":: echo pulled" \
+    ":: echo tagged" \
+    ":: echo wizcli version" \
+    "pull ubuntu:22.04 : echo pulled image" \
+    ":: echo 'ERROR: failed creating image driver'; exit 1"
+  stub buildkite-agent \
+    "annotate --append --style error --context ctx-wiz-docker-error : cat"
+
+  run "$hook"
+
+  assert_output --partial "Wiz docker image scan failed to run (exit code 1)"
+  assert_success
+
+  unstub date
+  unstub docker
+  unstub buildkite-agent
+}
+
+@test "Container image scan fails on an invalid scan-interval-hours" {
+  export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
+  export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="ubuntu:22.04"
+  export BUILDKITE_PLUGIN_WIZ_SCAN_INTERVAL_HOURS="0"
+
+  run "$PWD/hooks/post-command"
+
+  assert_output "scan-interval-hours must be a whole number of hours, at least 1"
+  assert_failure
+}
+
 @test "Container image scan annotates an error when the scan itself fails, even with annotations disabled" {
   export BUILDKITE_PLUGIN_WIZ_SCAN_TYPE="docker"
   export BUILDKITE_PLUGIN_WIZ_IMAGE_ADDRESS="registry.example.com/my-app:latest"
